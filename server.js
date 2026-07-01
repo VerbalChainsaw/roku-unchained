@@ -513,57 +513,51 @@ function startMonitor(intervalMs = 5000) {
 // ═══════════════════════════════════════════════════════════════════
 
 async function startup() {
-  console.log('╔══════════════════════════════════════════════╗');
-  console.log('║     ROKU DEV TOOLKIT + STREAM PROXY         ║');
-  console.log('╚══════════════════════════════════════════════╝');
+  console.log('');
+  console.log('  ╔══════════════════════════════════════╗');
+  console.log('  ║       Roku Unchained v1.0           ║');
+  console.log('  ║    Hardware freedom for your TV     ║');
+  console.log('  ╚══════════════════════════════════════╝');
+  console.log('');
 
-  // Start the stream proxy on a separate port
+  // Start stream proxy
   streamProxyServer = createStreamProxy();
-  streamProxyServer.listen(STREAM_PROXY_PORT, '0.0.0.0', () => {
-    console.log(`\n🎬 Stream Proxy: http://0.0.0.0:${STREAM_PROXY_PORT}/proxy/`);
-    console.log(`   Status:        http://localhost:${STREAM_PROXY_PORT}/proxy/status`);
-  });
+  await new Promise(r => streamProxyServer.listen(STREAM_PROXY_PORT, '0.0.0.0', r));
+  console.log(`  Stream Proxy   →  http://0.0.0.0:${STREAM_PROXY_PORT}`);
+  
+  // Start main server  
+  await new Promise(r => server.listen(PORT, HOST, r));
+  console.log(`  Dashboard      →  http://${HOST}:${PORT}`);
+  console.log(`  API            →  http://${HOST}:${PORT}/api`);
+  console.log('');
 
-  // Start the main API server
-  server.listen(PORT, HOST, () => {
-    console.log(`\n🛠️  Dev Toolkit API: http://${HOST}:${PORT}/api`);
-    console.log(`📊 Dashboard:       http://${HOST}:${PORT}/`);
-    console.log(`🔌 WebSocket:       ws://${HOST}:${PORT}/ws`);
-    console.log(`\nEndpoints:`);
-    console.log(`  GET  /api/discover         — Find Roku devices`);
-    console.log(`  GET  /api/devices          — List managed devices`);
-    console.log(`  GET  /api/device/:s/*      — Device operations`);
-    console.log(`  GET  /api/registry/*       — Registry tools`);
-    console.log(`  GET  /api/proxy/status     — Stream proxy stats`);
-    console.log(`  GET  /api/status           — System status`);
-    console.log(`\nPress Ctrl+C to stop\n`);
-  });
-
-  // Start auto-discovery
+  // Auto-discover
+  process.stdout.write('  Scanning network...');
   await deviceManager.discover().catch(() => {});
   const found = deviceManager.list();
   
   if (found.length > 0) {
-    console.log(`Found ${found.length} device(s):`);
+    console.log(` found ${found.length} device(s)`);
     for (const d of found) {
-      console.log(`  ${d.serial} @ ${d.ip}`);
-      clients.set(d.serial, new ECPClient(d.ip));
-      registryTools.set(d.serial, new RegistryTool(d.ip));
+      console.log(`    ${d.serial} @ ${d.ip}${d.healthy ? ' ✓' : ''}`);
+      if (!clients.has(d.serial)) clients.set(d.serial, new ECPClient(d.ip));
+      if (!registryTools.has(d.serial)) registryTools.set(d.serial, new RegistryTool(d.ip));
     }
-    // Run initial health check
     await deviceManager.healthCheckAll().catch(() => {});
   } else {
-    console.log('No Roku devices found. Make sure your Roku is on the same network.');
-    console.log('Run GET /api/discover to scan again.');
+    console.log(' no devices found (will keep scanning)');
   }
 
+  console.log('');
+  console.log('  Ready. Open the dashboard to get started.');
+  console.log(`  Press Ctrl+C to stop.`);
+  console.log('');
+
   startMonitor(10000);
-  
-  // Start periodic device discovery
   deviceManager.startAutoDiscovery(60000);
 }
 
-// ─── Graceful Shutdown ────────────────────────────────────────────
+// ─── Graceful Shutdown ───────
 function shutdown(signal) {
   console.log(`\n${signal} received — shutting down gracefully...`);
   

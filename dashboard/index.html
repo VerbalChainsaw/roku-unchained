@@ -1,629 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roku Dev Toolkit</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roku Unchained</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;
-  --text-dim:#8b949e;--accent:#58a6ff;--accent2:#3fb950;--danger:#f85149;
-  --warn:#d29922;--glow:0 0 12px rgba(88,166,255,0.15);
-  --radius:8px;--font:'Segoe UI',system-ui,sans-serif;--mono:'Cascadia Code','Fira Code',monospace;
+  --c0:#090c10;--c1:#0d1117;--c2:#161b22;--c3:#21262d;--c4:#30363d;--c5:#484f58;--c6:#8b949e;
+  --t1:#f0f6fc;--t2:#c9d1d9;--t3:#8b949e;
+  --a1:#58a6ff;--a2:#1f6feb;--g1:#3fb950;--g2:#238636;--r1:#f85149;--r2:#da3633;--y1:#d29922;
+  --p1:#a371f7;--o1:#db6d28;
+  --rds:6px;--rds-lg:10px;--font:system-ui,-apple-system,sans-serif;--mono:'Cascadia Code','Fira Code','Consolas',monospace;
+  --sh1:0 1px 0 rgba(255,255,255,.04);--sh2:0 4px 16px rgba(0,0,0,.3);
 }
-body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;min-height:100vh}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-header h1{font-size:1.3em;font-weight:600;letter-spacing:-0.02em}
-header h1 span{color:var(--accent)}
-.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
-.status-dot.online{background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
-.status-dot.offline{background:var(--danger)}
-nav{display:flex;gap:4px;background:var(--surface);padding:8px 20px;border-bottom:1px solid var(--border)}
-nav button{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:0.9em;transition:all 0.15s}
-nav button:hover,nav button.active{color:var(--text);border-color:var(--border);background:rgba(88,166,255,0.08)}
-main{padding:20px;max-width:1600px;margin:0 auto}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
-.panel h2{font-size:1em;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
-.grid{display:grid;gap:16px}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
-.card:hover{border-color:var(--accent);box-shadow:var(--glow)}
-.metric{text-align:center;padding:16px}
-.metric .value{font-size:2em;font-weight:700;font-family:var(--mono);color:var(--accent)}
-.metric .label{font-size:0.8em;color:var(--text-dim);margin-top:4px}
-.metric.warn .value{color:var(--warn)}
-.metric.good .value{color:var(--accent2)}
-.metric.danger .value{color:var(--danger)}
-table{width:100%;border-collapse:collapse;font-size:0.85em}
-th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-th{color:var(--text-dim);font-weight:500;text-transform:uppercase;font-size:0.75em;letter-spacing:0.05em}
-td{font-family:var(--mono);font-size:0.85em}
-tr:hover td{background:rgba(88,166,255,0.05)}
-.remote-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:300px;margin:0 auto}
-.remote-pad button{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);cursor:pointer;font-size:1.1em;transition:all 0.1s}
-.remote-pad button:active{background:var(--accent);border-color:var(--accent);transform:scale(0.95)}
-.remote-pad .wide{grid-column:span 3}
-input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:0.85em;width:100%}
-input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
-button.btn{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;font-size:0.85em;transition:opacity 0.15s}
-button.btn:hover{opacity:0.85}
-button.btn-sm{font-size:0.75em;padding:4px 10px}
-button.btn-danger{background:var(--danger)}
-.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.7em;font-weight:600}
-.badge-privacy{background:rgba(248,81,73,0.15);color:var(--danger)}
-.badge-tracking{background:rgba(210,153,34,0.15);color:var(--warn)}
-.badge-system{background:rgba(88,166,255,0.15);color:var(--accent)}
-.badge-display{background:rgba(63,185,80,0.15);color:var(--accent2)}
-.badge-audio{background:rgba(163,113,247,0.15);color:#a371f7}
-.badge-network{background:rgba(121,192,255,0.15);color:#79c0ff}
-.log-line{font-family:var(--mono);font-size:0.75em;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-dim)}
-.log-line .time{color:var(--warn);margin-right:12px}
-.log-line .type{color:var(--accent2);margin-right:8px}
-.tabs{display:flex;gap:4px;margin-bottom:12px}
-.tab-btn{background:transparent;border:1px solid var(--border);border-bottom:none;color:var(--text-dim);padding:8px 16px;border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;font-size:0.85em}
-.tab-btn.active{color:var(--accent);background:var(--bg);border-color:var(--accent)}
-input[type="range"]{width:100%;accent-color:var(--accent)}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--accent2);padding:12px 20px;border-radius:var(--radius);opacity:0;transform:translateY(10px);transition:all 0.2s;pointer-events:none;z-index:999}
-.toast.show{opacity:1;transform:translateY(0)}
+body{background:var(--c0);color:var(--t2);font-family:var(--font);font-size:14px;line-height:1.5;overflow:hidden;height:100vh}
+#app{display:flex;height:100vh}
+/* ─── Sidebar ─── */
+#sidebar{width:220px;min-width:220px;background:var(--c1);border-right:1px solid var(--c4);display:flex;flex-direction:column;padding:0;overflow-y:auto;z-index:10}
+.sidebar-brand{padding:20px 16px 12px;border-bottom:1px solid var(--c4)}
+.sidebar-brand .name{font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.02em}
+.sidebar-brand .name span{color:var(--a1)}
+.sidebar-brand .ver{font-size:11px;color:var(--t3);margin-top:2px}
+.sidebar-nav{flex:1;padding:8px;display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rds);color:var(--t3);cursor:pointer;font-size:13px;font-weight:500;transition:all .12s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{color:var(--t2);background:var(--c3)}
+.nav-item.active{color:var(--t1);background:var(--c3);box-shadow:inset 2px 0 0 var(--a1)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0}
+.nav-item .badge{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--a2);color:#fff;margin-left:auto}
+.nav-item .badge.warn{background:var(--r2)}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--c4);font-size:11px;color:var(--t3)}
+.sidebar-footer .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.sidebar-footer .dot.ok{background:var(--g1);box-shadow:0 0 6px var(--g1)}
+.sidebar-footer .dot.off{background:var(--r1)}
+/* ─── Main ─── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--c1);border-bottom:1px solid var(--c4);min-height:52px}
+#toolbar h2{font-size:16px;font-weight:600;color:var(--t1)}
+.toolbar-actions{display:flex;gap:8px;align-items:center}
+#content{flex:1;overflow-y:auto;padding:20px}
 .hidden{display:none!important}
-::-webkit-scrollbar{width:8px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rds);font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;border:1px solid var(--c4);background:var(--c3);color:var(--t2);font-family:var(--font)}
+.btn:hover{border-color:var(--c5);background:var(--c4)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--a2);border-color:var(--a2);color:#fff}
+.btn.primary:hover{background:var(--a1);border-color:var(--a1)}
+.btn.green{background:var(--g2);border-color:var(--g2);color:#fff}
+.btn.green:hover{background:var(--g1);border-color:var(--g1)}
+.btn.red{background:var(--r2);border-color:var(--r2);color:#fff}
+.btn.red:hover{background:var(--r1);border-color:var(--r1)}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--c3);border-color:var(--c4)}
+/* ─── Cards / Panels ─── */
+.card{background:var(--c2);border:1px solid var(--c4);border-radius:var(--rds-lg);padding:20px;transition:border-color .15s}
+.card:hover{border-color:var(--c5)}
+.card-header{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.g4{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+/* ─── Metrics ─── */
+.metric{text-align:center;padding:16px}
+.metric .val{font-size:32px;font-weight:700;font-family:var(--mono);color:var(--a1);line-height:1.2}
+.metric .val.g{color:var(--g1)}.metric .val.r{color:var(--r1)}.metric .val.y{color:var(--y1)}
+.metric .lbl{font-size:12px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+/* ─── Tables ─── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--c3);font-size:13px}
+.tbl th{color:var(--t3);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;padding-top:0}
+.tbl td{font-family:var(--mono);font-size:12px}
+.tbl tr:hover td{background:rgba(88,166,255,.04)}
+.tbl .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;font-family:var(--font)}
+.tag-p{background:rgba(248,81,73,.15);color:var(--r1)}
+.tag-t{background:rgba(210,153,34,.15);color:var(--y1)}
+.tag-s{background:rgba(88,166,255,.15);color:var(--a1)}
+.tag-g{background:rgba(63,185,80,.15);color:var(--g1)}
+.tag-a{background:rgba(163,113,247,.15);color:var(--p1)}
+.tag-n{background:rgba(121,192,255,.15);color:var(--a1)}
+.tag-d{background:rgba(219,109,40,.15);color:var(--o1)}
+/* ─── Remote ─── */
+.remote-shell{display:flex;justify-content:center;align-items:center;padding:30px}
+.remote{display:grid;grid-template-columns:repeat(3,80px);grid-template-rows:repeat(7,56px);gap:6px}
+.remote button{background:var(--c3);border:1px solid var(--c4);border-radius:var(--rds);color:var(--t2);cursor:pointer;font-size:16px;transition:all .08s;user-select:none;position:relative}
+.remote button:hover{background:var(--c4);border-color:var(--c5)}
+.remote button:active,.remote button.pressed{background:var(--a2);border-color:var(--a1);color:#fff;transform:scale(.93);box-shadow:0 0 12px rgba(88,166,255,.3)}
+.remote button.w2{grid-column:span 2}
+.remote button.w3{grid-column:span 3}
+.remote .gap{pointer-events:none}
+/* ─── Toast ─── */
+#toast-ctr{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:999;pointer-events:none}
+.toast{padding:12px 20px;background:var(--c2);border:1px solid var(--c4);border-radius:var(--rds-lg);color:var(--t2);font-size:13px;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:auto;box-shadow:var(--sh2)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-color:var(--g1)}.toast.err{border-color:var(--r1)}
+/* ─── Modal ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--c2);border:1px solid var(--c4);border-radius:var(--rds-lg);padding:24px;max-width:500px;width:90%;box-shadow:var(--sh2)}
+.modal h3{font-size:18px;margin-bottom:12px;color:var(--t1)}
+.modal p{color:var(--t3);margin-bottom:16px;font-size:13px;line-height:1.6}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+/* ─── Inputs ─── */
+input,select{background:var(--c3);border:1px solid var(--c4);border-radius:var(--rds);padding:8px 12px;color:var(--t2);font-family:var(--mono);font-size:13px;width:100%;transition:border-color .15s}
+input:focus,select:focus{outline:none;border-color:var(--a1);box-shadow:0 0 0 2px rgba(88,166,255,.15)}
+input[type=range]{width:100%;accent-color:var(--a1);height:6px}
+.search-box{position:relative}
+.search-box input{padding-left:34px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);width:16px;height:16px}
+/* ─── Animations ─── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+.anim-in{animation:fadeIn .25s ease}
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--c4);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--c5)}
+/* ─── Welcome / Empty ─── */
+.empty-state{text-align:center;padding:80px 20px;color:var(--t3)}
+.empty-state svg{width:64px;height:64px;margin-bottom:20px;opacity:.3}
+.empty-state h3{font-size:20px;color:var(--t2);margin-bottom:8px}
+.empty-state p{font-size:14px;max-width:400px;margin:0 auto 20px;line-height:1.6}
+/* ─── Console ─── */
+.console{background:var(--c0);border:1px solid var(--c4);border-radius:var(--rds-lg);padding:16px;font-family:var(--mono);font-size:12px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.7}
+.console .entry{margin-bottom:2px;animation:slideRight .2s ease}
+.console .ts{color:var(--c5)}.console .lv{color:var(--t3)}.console .msg{color:var(--t2)}
+.console .lv.warn{color:var(--y1)}.console .lv.err{color:var(--r1)}.console .lv.ok{color:var(--g1)}
+/* ─── Proxy bar ─── */
+.proxy-bar{display:flex;align-items:center;gap:16px;padding:8px 20px;background:var(--c2);border-bottom:1px solid var(--c4);font-size:12px}
+.proxy-bar .stat{display:flex;align-items:center;gap:6px}
+.proxy-bar .stat .dot{width:6px;height:6px;border-radius:50%}
+.proxy-bar .stat .dot.run{background:var(--g1);animation:pulse 2s infinite}
+.proxy-bar .stat .dot.stop{background:var(--c5)}
+.proxy-bar .stat strong{font-family:var(--mono);font-size:14px}
+/* ─── Responsive ─── */
+@media(max-width:768px){#sidebar{width:60px;min-width:60px}.sidebar-brand .name,.sidebar-brand .ver,.nav-item span:not(.badge),.sidebar-footer{display:none}.nav-item{justify-content:center;padding:10px}#content{padding:12px}}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🔧 <span>Roku</span> Dev Toolkit</h1>
-  <div id="device-status">
-    <span class="status-dot offline" id="status-dot"></span>
-    <span id="status-text">No devices</span>
-  </div>
-</header>
-
-<nav>
-  <button data-panel="overview" class="active">Overview</button>
-  <button data-panel="remote">Remote</button>
-  <button data-panel="apps">Apps</button>
-  <button data-panel="registry">Registry</button>
-  <button data-panel="performance">Performance</button>
-  <button data-panel="scenegraph">SceneGraph</button>
-  <button data-panel="proxy">Stream Proxy</button>
-  <button data-panel="logs">Logs</button>
-</nav>
-
-<main>
-  <!-- OVERVIEW -->
-  <div id="panel-overview">
-    <div class="grid grid-4" id="metrics-grid"></div>
-    <div class="panel"><h2>Connected Devices</h2><div id="devices-table"></div></div>
-    <div class="grid grid-2">
-      <div class="panel"><h2>Device Info</h2><div id="device-info"></div></div>
-      <div class="panel"><h2>Media Player</h2><div id="media-player"></div></div>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sidebar-brand">
+      <div class="name">Roku <span>Unchained</span></div>
+      <div class="ver">v1.0 — Hardware Freedom</div>
     </div>
-  </div>
+    <nav class="sidebar-nav" id="nav">
+      <button class="nav-item active" data-panel="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+      <button class="nav-item" data-panel="remote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>Remote</span></button>
+      <button class="nav-item" data-panel="apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Apps</span></button>
+      <button class="nav-item" data-panel="registry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><span>Registry</span></button>
+      <button class="nav-item" data-panel="proxy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10M12 2a15.3 15.3 0 00-4 10 15.3 15.3 0 004 10"/></svg><span>Stream Proxy</span><span class="badge" id="proxy-badge">ON</span></button>
+      <button class="nav-item" data-panel="console"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Console</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="dot off" id="status-dot"></span>
+      <span id="status-text">No devices</span>
+    </div>
+  </aside>
 
-  <!-- REMOTE -->
-  <div id="panel-remote" class="hidden">
-    <div class="panel">
-      <h2>Remote Control</h2>
-      <select id="remote-device-select" style="margin-bottom:12px"><option>Select device...</option></select>
-      <div class="remote-pad">
-        <div></div><button onclick="sendKey('Up')">▲</button><div></div>
-        <button onclick="sendKey('Left')">◄</button><button onclick="sendKey('Select')">OK</button><button onclick="sendKey('Right')">►</button>
-        <div></div><button onclick="sendKey('Down')">▼</button><div></div>
-        <button onclick="sendKey('Back')" class="wide">Back</button>
-        <button onclick="sendKey('Home')" class="wide">Home</button>
-        <button onclick="sendKey('PlayPause')">⏯</button>
-        <button onclick="sendKey('Rev')">⏪</button>
-        <button onclick="sendKey('Fwd')">⏩</button>
-        <button onclick="sendKey('Info')">ℹ</button>
-        <button onclick="sendKey('Star')">⭐</button>
-        <button onclick="sendKey('VolumeUp')">🔊</button>
-        <button onclick="sendKey('VolumeDown')">🔉</button>
-        <button onclick="sendKey('VolumeMute')">🔇</button>
-        <button onclick="sendKey('PowerOff')" class="wide" style="background:var(--danger)">Power Off</button>
+  <main id="main">
+    <div class="proxy-bar" id="proxy-bar" style="display:none">
+      <span style="color:var(--t3);font-weight:600">PROXY</span>
+      <div class="stat"><span class="dot run"></span><strong id="pb-rq">0</strong> requests</div>
+      <div class="stat" style="color:var(--g1)"><strong id="pb-ad">0</strong> ads blocked</div>
+      <div class="stat" style="color:var(--a1)"><strong id="pb-st">0</strong> active</div>
+      <div class="stat" style="color:var(--t3)"><strong id="pb-bw">0</strong> proxied</div>
+    </div>
+
+    <div id="toolbar"><h2 id="toolbar-title">Dashboard</h2>
+      <div class="toolbar-actions">
+        <select id="device-picker" style="width:auto;min-width:180px" onchange="selectDevice(this.value)"><option>No devices found</option></select>
+        <button class="btn primary" onclick="discover()" id="scan-btn">Scan Network</button>
+        <button class="btn ghost sm" onclick="loadCurrentPanel()">↻ Refresh</button>
       </div>
-      <div class="panel" style="margin-top:12px">
-        <h2>Text Input</h2>
-        <div style="display:flex;gap:8px">
-          <input id="text-input" placeholder="Type to send text to Roku..." onkeydown="if(event.key==='Enter')sendText()">
-          <button class="btn" onclick="sendText()">Send</button>
+    </div>
+
+    <div id="content">
+      <!-- DASHBOARD -->
+      <div id="panel-overview">
+        <div class="grid g4" id="metrics-grid"></div>
+        <div style="margin-top:16px" class="grid g2">
+          <div class="card"><div class="card-header">Device Information</div><div id="device-info"><div class="empty-state"><p>Select a Roku from the dropdown above</p></div></div></div>
+          <div class="card"><div class="card-header">Media Playback</div><div id="media-player"><div class="empty-state"><p>Select a device to view playback state</p></div></div></div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- APPS -->
-  <div id="panel-apps" class="hidden">
-    <div class="panel">
-      <h2>Installed Apps</h2>
-      <select id="apps-device-select" style="margin-bottom:12px"><option>Select device...</option></select>
-      <div id="apps-list"></div>
-    </div>
-    <div class="panel">
-      <h2>Launch App</h2>
-      <div style="display:flex;gap:8px">
-        <input id="launch-app-id" placeholder="App ID (e.g., 12 for Netflix)">
-        <input id="launch-app-params" placeholder="Optional params (key=value)">
-        <button class="btn" onclick="launchApp()">Launch</button>
+      <!-- REMOTE -->
+      <div id="panel-remote" class="hidden">
+        <div class="card"><div class="card-header">Virtual Remote</div>
+          <div class="remote-shell"><div class="remote" id="remote-pad">
+            <button class="gap"></button><button data-key="Up">▲</button><button class="gap"></button>
+            <button data-key="Left">◄</button><button data-key="Select" style="font-weight:700">OK</button><button data-key="Right">►</button>
+            <button class="gap"></button><button data-key="Down">▼</button><button class="gap"></button>
+            <button data-key="Back" class="w3">Back</button>
+            <button data-key="Home" class="w3">Home</button>
+            <button data-key="Rev">⏪</button><button data-key="PlayPause">⏯</button><button data-key="Fwd">⏩</button>
+            <button data-key="Info">ℹ</button><button data-key="Star">⭐</button><button data-key="Search">🔍</button>
+            <button data-key="VolumeDown" class="w2">🔉</button><button data-key="VolumeMute">🔇</button><button data-key="VolumeUp" class="w2">🔊</button>
+            <button data-key="PowerOff" class="w3" style="background:var(--r2);border-color:var(--r2);color:#fff">Power Off</button>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- APPS -->
+      <div id="panel-apps" class="hidden">
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header">App Launcher</div>
+          <div style="display:flex;gap:8px">
+            <input id="launch-id" placeholder="App ID (e.g., 12 for Netflix)" style="flex:1">
+            <input id="launch-params" placeholder="Params" style="flex:0 0 200px">
+            <button class="btn primary" onclick="launchApp()">Launch</button>
+          </div>
+        </div>
+        <div class="card"><div class="card-header">Installed Apps</div><div id="apps-list"></div></div>
+      </div>
+
+      <!-- REGISTRY -->
+      <div id="panel-registry" class="hidden">
+        <div class="card">
+          <div class="card-header">Registry Explorer</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <div class="search-box" style="flex:1;min-width:200px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="reg-search" placeholder="Search keys..."></div>
+            <select id="reg-cat" style="width:auto"><option value="">All</option><option value="privacy">Privacy</option><option value="tracking">Tracking</option><option value="system">System</option><option value="display">Display</option><option value="audio">Audio</option><option value="network">Network</option><option value="power">Power</option><option value="accessibility">Accessibility</option></select>
+            <button class="btn" onclick="loadRegistry()">Load</button>
+            <button class="btn red sm" onclick="runPrivacyAudit()">Privacy Audit</button>
+          </div>
+          <div id="registry-table"></div>
+        </div>
+      </div>
+
+      <!-- STREAM PROXY -->
+      <div id="panel-proxy" class="hidden">
+        <div class="grid g4" id="proxy-metrics"></div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-header">Controls</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn green" id="ad-toggle-btn" onclick="toggleAdBlock()">Ad Blocking: ON</button>
+            <button class="btn green" id="qual-toggle-btn" onclick="toggleQuality()">Quality Filter: ON</button>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <label style="display:block;margin-bottom:4px;font-size:12px;color:var(--t3)">Max Bitrate: <strong id="br-lbl">8 Mbps</strong></label>
+              <input type="range" min="1" max="50" value="8" oninput="updateBitrate(this.value)">
+            </div>
+            <div style="flex:1;min-width:200px">
+              <label style="display:block;margin-bottom:4px;font-size:12px;color:var(--t3)">Max Resolution</label>
+              <select id="max-res" onchange="updateResolution(this.value)">
+                <option value="">No Limit</option><option value="1920x1080" selected>1080p</option><option value="1280x720">720p</option><option value="854x480">480p</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONSOLE -->
+      <div id="panel-console" class="hidden">
+        <div class="card"><div class="card-header">Event Console</div><div class="console" id="console-out"><span style="color:var(--t3)">Waiting for events...</span></div></div>
       </div>
     </div>
-  </div>
+  </main>
+</div>
 
-  <!-- REGISTRY -->
-  <div id="panel-registry" class="hidden">
-    <div class="panel">
-      <h2>Registry Explorer</h2>
-      <select id="registry-device-select" style="margin-bottom:8px"><option>Select device...</option></select>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <input id="registry-search" placeholder="Search keys or values...">
-        <select id="registry-category">
-          <option value="">All Categories</option>
-          <option value="privacy">Privacy</option>
-          <option value="tracking">Tracking</option>
-          <option value="system">System</option>
-          <option value="display">Display</option>
-          <option value="audio">Audio</option>
-          <option value="network">Network</option>
-          <option value="accessibility">Accessibility</option>
-          <option value="power">Power</option>
-          <option value="developer">Developer</option>
-        </select>
-        <button class="btn" onclick="loadRegistry()">Load</button>
-        <button class="btn btn-danger" onclick="runPrivacyAudit()">Privacy Audit</button>
-      </div>
-      <div id="registry-table"></div>
-    </div>
-  </div>
-
-  <!-- PERFORMANCE -->
-  <div id="panel-performance" class="hidden">
-    <div class="grid grid-3" id="perf-metrics"></div>
-    <div class="panel"><h2>CPU & Memory (chanperf)</h2><pre id="chanperf-data" style="font-size:0.8em;max-height:300px;overflow:auto">Select device to load...</pre></div>
-    <div class="panel"><h2>Graphics FPS</h2><pre id="gfx-data" style="font-size:0.8em">Select device to load...</pre></div>
-    <div class="panel"><h2>Texture Memory (r2d2-bitmaps)</h2><pre id="bitmap-data" style="font-size:0.8em;max-height:300px;overflow:auto">Select device to load...</pre></div>
-  </div>
-
-  <!-- SCENEGRAPH -->
-  <div id="panel-scenegraph" class="hidden">
-    <div class="panel"><h2>SceneGraph Node Explorer</h2>
-      <select id="sg-device-select" style="margin-bottom:8px"><option>Select device...</option></select>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="btn" onclick="loadSGNodes('all')">All Nodes</button>
-        <button class="btn" onclick="loadSGNodes('roots')">Root Nodes</button>
-        <button class="btn" onclick="loadSGNodes('count')">Count Only</button>
-      </div>
-      <pre id="sg-data" style="font-size:0.75em;max-height:400px;overflow:auto;white-space:pre-wrap">Select device to load...</pre>
-    </div>
-  </div>
-
-  <!-- STREAM PROXY -->
-  <div id="panel-proxy" class="hidden">
-    <div class="grid grid-4" id="proxy-metrics"></div>
-    <div class="panel">
-      <h2>Ad Blocking</h2>
-      <div style="display:flex;gap:12px;margin-bottom:12px">
-        <button class="btn" id="ad-block-toggle" onclick="toggleAdBlock()">Ad Block: ON</button>
-        <button class="btn" id="quality-toggle" onclick="toggleQuality()">Quality Filter: ON</button>
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;margin-bottom:4px">Max Bitrate: <span id="bitrate-label">8 Mbps</span></label>
-        <input type="range" min="1" max="50" value="8" oninput="updateBitrate(this.value)" id="bitrate-slider">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;margin-bottom:4px">Max Resolution:</label>
-        <select id="max-res" onchange="updateResolution(this.value)">
-          <option value="">No Limit</option>
-          <option value="1920x1080" selected>1080p (Full HD)</option>
-          <option value="1280x720">720p (HD)</option>
-          <option value="854x480">480p (SD)</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOGS -->
-  <div id="panel-logs" class="hidden">
-    <div class="panel"><h2>Event Log</h2><div id="log-container" style="max-height:500px;overflow:auto;font-family:var(--mono)"></div></div>
-  </div>
-</main>
-
-<div id="toast" class="toast"></div>
+<div id="toast-ctr"></div>
 
 <script>
-// ─── State ───
-const STATE = {
-  devices: [],
-  selectedDevice: null,
-  ws: null,
-  logs: [],
-};
+const $=id=>document.getElementById(id);
+const P=classList=>[...document.querySelectorAll(classList)];
 
-// ─── WebSocket ───
-function connectWS() {
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  STATE.ws = new WebSocket(`${proto}//${location.host}/ws`);
-  STATE.ws.onmessage = (ev) => {
-    const data = JSON.parse(ev.data);
-    handleWSMessage(data);
-  };
-  STATE.ws.onclose = () => setTimeout(connectWS, 3000);
-  STATE.ws.onerror = () => {};
+const S={devices:[],serial:null,ws:null,logs:[],adBlock:true,qualFilter:true,proxyRunning:false};
+
+function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';if(b<1073741824)return (b/1048576).toFixed(1)+' MB';return (b/1073741824).toFixed(2)+' GB'}
+
+async function api(url,opts={}){
+  const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});
+  if(!r.ok){toast(`Error ${r.status}`,'err');throw new Error(await r.text())}
+  return r.json();
 }
 
-function handleWSMessage(data) {
-  if (data.type === 'devices') {
-    STATE.devices = data.devices;
-    renderDevices();
-    updateStatus();
-  } else if (data.type === 'health') {
-    updateDeviceHealth(data.serial, data.healthy);
-  } else if (data.type === 'snapshot') {
-    renderSnapshot(data.snapshot);
-  }
-  addLog(data);
+function toast(msg,type='ok'){const c=$('toast-ctr');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),200)},2500)}
+
+// WebSocket
+function wsConnect(){const p=location.protocol==='https:'?'wss:':'ws:';S.ws=new WebSocket(`${p}//${location.host}/ws`);S.ws.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='devices'){S.devices=d.devices;renderDevices();renderStatus()}else if(d.type==='health'){const dv=S.devices.find(x=>x.serial===d.serial);if(dv)dv.healthy=d.healthy;renderStatus()}else if(d.type==='snapshot')renderSnapshot(d.snapshot,d.serial);addLog(d)}}catch{}};S.ws.onclose=()=>setTimeout(wsConnect,3000)}
+function addLog(d){S.logs.unshift({ts:new Date().toLocaleTimeString(),...d});if(S.logs.length>200)S.logs.length=200;renderConsole()}
+
+// Navigation
+let currentPanel='overview';
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentPanel=b.dataset.panel;$('toolbar-title').textContent=b.querySelector('span')?.textContent||'Dashboard';document.querySelectorAll('[id^="panel-"]').forEach(p=>p.classList.add('hidden'));const panel=$(currentPanel==='console'?'panel-console':'panel-'+currentPanel);if(panel)panel.classList.remove('hidden');loadCurrentPanel()}));
+
+function loadCurrentPanel(){
+  const m={overview:loadOverview,remote:null,apps:loadApps,registry:loadRegistry,'proxy':loadProxyStatus,console:renderConsole};
+  if(m[currentPanel])m[currentPanel]();
+}
+function setupRemote(){
+  document.querySelectorAll('#remote-pad button[data-key]').forEach(b=>{b.addEventListener('mousedown',()=>sendKey(b.dataset.key,b));b.addEventListener('mouseup',()=>b.classList.remove('pressed'));b.addEventListener('mouseleave',()=>b.classList.remove('pressed'))});
 }
 
-function addLog(data) {
-  STATE.logs.unshift({ ts: new Date().toLocaleTimeString(), ...data });
-  if (STATE.logs.length > 200) STATE.logs.length = 200;
-  const container = document.getElementById('log-container');
-  if (container) {
-    container.innerHTML = STATE.logs.slice(0, 50).map(l =>
-      `<div class="log-line"><span class="time">${l.ts}</span><span class="type">${l.type||''}</span>${JSON.stringify(l).substring(0,120)}</div>`
-    ).join('');
-  }
+// Devices
+async function discover(note=true){if(note)toast('Scanning network...',null);try{const r=await api('/api/discover');S.devices=r.devices;renderDevices();renderStatus();if(note)toast(`Found ${r.devices.length} device(s)`)}catch{toast('Discovery failed','err')}}
+function renderDevices(){const s=$('device-picker'),v=s.value;let opts='<option value="">Select device...</option>';S.devices.forEach(d=>opts+=`<option value="${d.serial}">${d.serial||'?'} — ${d.ip}</option>`);s.innerHTML=opts;if(v&&S.devices.some(d=>d.serial===v))s.value=v;if(S.serial&&S.devices.some(d=>d.serial===S.serial))s.value=S.serial}
+function renderStatus(){const d=$('status-dot'),t=$('status-text'),o=S.devices.filter(x=>x.healthy).length;if(o>0){d.className='dot ok';t.textContent=`${o} device(s) online`}else if(S.devices.length>0){d.className='dot off';t.textContent=`${S.devices.length} offline`}else{d.className='dot off';t.textContent='No devices'}}
+function selectDevice(s){if(!s)return;S.serial=s;$('device-picker').value=s;toast(`Selected: ${s}`);loadCurrentPanel()}
+
+async function snapshotDevice(s){toast('Capturing snapshot...');const r=await api(`/api/device/${s||S.serial}/snapshot`,{method:'POST'});renderSnapshot(r.snapshot,s||S.serial);toast('Snapshot complete')}
+function renderSnapshot(sn,sr){if(sn.device)$('device-info').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(sn.device,null,2)}</pre>`;if(sn.mediaPlayer)$('media-player').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(sn.mediaPlayer,null,2)}</pre>`;renderMetrics(sn)}
+
+function renderMetrics(sn){
+  const a=sn.apps?.length||0,g=sn.graphicsFps||'—',ac=sn.activeApp?.['#text']||sn.activeApp?.id||'None',er=sn.errors?.length||0;
+  $('metrics-grid').innerHTML=`<div class="card metric"><div class="val">${a}</div><div class="lbl">Installed Apps</div></div><div class="card metric"><div class="val">${ac}</div><div class="lbl">Active App</div></div><div class="card metric"><div class="val ${g>30?'g':''}">${g}</div><div class="lbl">Graphics FPS</div></div><div class="card metric"><div class="val ${er>0?'r':''}">${er}</div><div class="lbl">Errors</div></div>`;
 }
 
-// ─── API helpers ───
-async function api(url, opts = {}) {
-  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
-  if (!res.ok) {
-    const err = await res.text();
-    showToast(`Error: ${res.status}`, 'error');
-    throw new Error(err);
-  }
-  return res.json();
-}
+async function loadOverview(){if(!S.serial)return;const r=await api(`/api/device/${S.serial}`);$('device-info').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(r.deviceInfo,null,2)}</pre>`;try{const mp=await api(`/api/device/${S.serial}/media-player`);$('media-player').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(mp.player||mp,null,2)}</pre>`}catch{}$('apps-list').innerHTML=`<table class="tbl"><thead><tr><th>ID</th><th>Name</th><th></th></tr></thead><tbody>${(r.apps||[]).map(a=>`<tr><td>${a['@_id']||a.id||'?'}</td><td>${a['#text']||a.name||'?'}</td><td><button class="btn sm" onclick="launchApp('${a['@_id']||a.id}')">Launch</button></td></tr>`).join('')}</tbody></table>`;renderMetrics({apps:r.apps,activeApp:r.activeApp})}
 
-function getSelectedDevice() {
-  return document.getElementById('remote-device-select')?.value || STATE.selectedDevice;
-}
+// Remote
+async function sendKey(k,el){if(!S.serial){toast('Select a device','err');return}if(el)el.classList.add('pressed');try{await api(`/api/device/${S.serial}/keypress`,{method:'POST',body:JSON.stringify({key:k})})}catch{toast('Key failed','err')}}
 
-// ─── Navigation ───
-document.querySelectorAll('nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.add('hidden'));
-    document.getElementById(`panel-${btn.dataset.panel}`).classList.remove('hidden');
-    if (btn.dataset.panel === 'overview') loadOverview();
-    if (btn.dataset.panel === 'apps') loadApps();
-    if (btn.dataset.panel === 'performance') loadPerf();
-    if (btn.dataset.panel === 'proxy') loadProxyStatus();
-  });
+// Apps
+async function loadApps(){if(!S.serial)return;const r=await api(`/api/device/${S.serial}/apps`);$('apps-list').innerHTML=`<table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Version</th><th></th></tr></thead><tbody>${(r.apps||[]).map(a=>`<tr><td>${a['@_id']||a.id||'?'}</td><td>${a['#text']||a.name||'?'}</td><td>${a['@_type']||a.type||''}</td><td>${a['@_version']||a.version||''}</td><td><button class="btn sm primary" onclick="launchApp('${a['@_id']||a.id}')">Launch</button></td></tr>`).join('')}</tbody></table>`}
+async function launchApp(id){const appId=id||$('launch-id').value;if(!S.serial||!appId){toast('Need device + app ID','err');return}const params=$('launch-params').value;await api(`/api/device/${S.serial}/launch`,{method:'POST',body:JSON.stringify({appId,params:params?Object.fromEntries([params.split('=')]):null})});toast(`Launched ${appId}`)}
+
+// Registry
+async function loadRegistry(){if(!S.serial)return;const s=$('reg-search').value,cat=$('reg-cat').value;let url=`/api/device/${S.serial}/registry?export=true`;if(s)url+=`&search=${encodeURIComponent(s)}`;if(cat){const kr=await api(`/api/registry/known-keys?category=${cat}`);renderKnownKeys(kr.keys)}else{const r=await api(url);renderRegEntries(r.entries)}}
+function renderRegEntries(es){const h=`<table class="tbl"><thead><tr><th>Key</th><th>Value</th><th>Info</th></tr></thead><tbody>${es.map(e=>{const k=e.known;return`<tr><td>${e.key}</td><td style="max-width:300px;word-break:break-all">${e.value}</td><td style="font-size:12px;font-family:var(--font)">${k?`${k.description} <span class="tag tag-${k.category}">${k.category}</span>`:''}</td></tr>`}).join('')}</tbody></table>`;$('registry-table').innerHTML=h}
+function renderKnownKeys(ks){const h=`<table class="tbl"><thead><tr><th>Key</th><th>Description</th><th>Category</th><th>Default</th></tr></thead><tbody>${Object.entries(ks).map(([k,v])=>`<tr><td>${k}</td><td>${v.description}</td><td><span class="tag tag-${v.category}">${v.category}</span></td><td>${v.defaultValue||''}</td></tr>`).join('')}</tbody></table>`;$('registry-table').innerHTML=h}
+async function runPrivacyAudit(){if(!S.serial)return;const r=await api(`/api/device/${S.serial}/registry?audit=privacy`);const h=`<table class="tbl"><thead><tr><th>Key</th><th>Description</th><th>Current</th><th>Status</th><th>Recommend</th></tr></thead><tbody>${r.audit.map(a=>`<tr><td>${a.key}</td><td>${a.description}</td><td>${a.currentValue}</td><td><span class="tag ${a.status==='enabled'?'tag-t':'tag-g'}">${a.status}</span></td><td>${a.recommended}</td></tr>`).join('')}</tbody></table>`;$('registry-table').innerHTML=h;toast('Privacy audit complete')}
+
+// Stream Proxy
+async function loadProxyStatus(){try{const r=await api('/api/proxy/status');S.proxyRunning=true;$('proxy-bar').style.display='flex';$('pb-rq').textContent=r.totalRequests||0;$('pb-ad').textContent=r.adsBlocked||0;$('pb-st').textContent=r.activeStreams||0;$('pb-bw').textContent=fmtBytes(r.bytesProxied||0);$('proxy-metrics').innerHTML=`<div class="card metric"><div class="val">${r.totalRequests||0}</div><div class="lbl">Proxied Requests</div></div><div class="card metric"><div class="val g">${r.adsBlocked||0}</div><div class="lbl">Ads Blocked</div></div><div class="card metric"><div class="val">${r.activeStreams||0}</div><div class="lbl">Active Streams</div></div><div class="card metric"><div class="val y">${fmtBytes(r.bytesProxied||0)}</div><div class="lbl">Data Proxied</div></div>`}catch{S.proxyRunning=false}}
+async function toggleAdBlock(){S.adBlock=!S.adBlock;const b=$('ad-toggle-btn');b.textContent=`Ad Blocking: ${S.adBlock?'ON':'OFF'}`;b.className=`btn ${S.adBlock?'green':'red'}`;try{await api('/api/proxy/config',{method:'POST',body:JSON.stringify({adBlocking:{enabled:S.adBlock}})})}catch{}}
+async function toggleQuality(){S.qualFilter=!S.qualFilter;const b=$('qual-toggle-btn');b.textContent=`Quality Filter: ${S.qualFilter?'ON':'OFF'}`;b.className=`btn ${S.qualFilter?'green':'red'}`;try{await api('/api/proxy/config',{method:'POST',body:JSON.stringify({quality:{enabled:S.qualFilter}})})}catch{}}
+function updateBitrate(v){$('br-lbl').textContent=`${v} Mbps`}
+function updateResolution(v){}
+
+// Console
+function renderConsole(){const o=$('console-out');if(!o)return;o.innerHTML=S.logs.slice(0,100).map(l=>`<div class="entry"><span class="ts">${l.ts||''}</span> <span class="lv ${l.type==='error'?'err':l.type==='ad_blocked'?'ok':''}">${l.type||''}</span> <span class="msg">${JSON.stringify(l).substring(0,200)}</span></div>`).join('')||'<span style="color:var(--t3)">Waiting for events...</span>'}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
+  const km={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',Enter:'Select',Escape:'Back',Backspace:'Back',h:'Home',p:'PlayPause',m:'VolumeMute'};
+  if(km[e.key]&&S.serial)sendKey(km[e.key]);if(e.key==='r'&&e.ctrlKey){e.preventDefault();discover()}
 });
 
-// ─── Devices ───
-async function discover() {
-  showToast('Scanning network...');
-  try {
-    const res = await api('/api/discover');
-    STATE.devices = res.devices;
-    renderDevices();
-    updateStatus();
-    showToast(`Found ${res.devices.length} device(s)`);
-  } catch(e) {
-    showToast('Discovery failed', 'error');
-  }
-}
+// Key repeat for held buttons
+const heldKeys=new Map();
+document.querySelectorAll('#remote-pad button[data-key]').forEach(b=>{
+  b.addEventListener('pointerdown',()=>{const k=b.dataset.key;if(!S.serial)return;if(k==='VolumeUp'||k==='VolumeDown')heldKeys.set(k,setInterval(()=>sendKey(k),200))});
+  b.addEventListener('pointerup',()=>{const i=heldKeys.get(b.dataset.key);if(i){clearInterval(i);heldKeys.delete(b.dataset.key)}b.classList.remove('pressed')});
+  b.addEventListener('pointerleave',()=>{const i=heldKeys.get(b.dataset.key);if(i){clearInterval(i);heldKeys.delete(b.dataset.key)}b.classList.remove('pressed')});
+});
 
-function renderDevices() {
-  const html = STATE.devices.length === 0
-    ? '<p style="color:var(--text-dim)">No devices found. <a href="#" onclick="discover()" style="color:var(--accent)">Scan now</a></p>'
-    : `<table><thead><tr><th>Serial</th><th>IP</th><th>Status</th><th>Server</th><th>Actions</th></tr></thead><tbody>
-      ${STATE.devices.map(d => `<tr>
-        <td style="font-family:var(--mono)">${d.serial||'?'}</td>
-        <td>${d.ip}</td>
-        <td><span class="status-dot ${d.healthy?'online':'offline'}"></span>${d.healthy?'Online':'Offline'}</td>
-        <td style="font-size:0.8em">${d.server||'?'}</td>
-        <td>
-          <button class="btn btn-sm" onclick="selectDevice('${d.serial}')">Select</button>
-          <button class="btn btn-sm" onclick="snapshotDevice('${d.serial}')">Snapshot</button>
-        </td>
-      </tr>`).join('')}</tbody></table>`;
-  
-  const el = document.getElementById('devices-table');
-  if (el) el.innerHTML = html;
-  
-  // Update all device selects
-  document.querySelectorAll('select[id$="-device-select"]').forEach(sel => {
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Select device...</option>' +
-      STATE.devices.map(d => `<option value="${d.serial}">${d.serial} (${d.ip})</option>`).join('');
-    if (current) sel.value = current;
-  });
-}
-
-function updateStatus() {
-  const dot = document.getElementById('status-dot');
-  const text = document.getElementById('status-text');
-  const online = STATE.devices.filter(d => d.healthy).length;
-  
-  if (online > 0) {
-    dot.className = 'status-dot online';
-    text.textContent = `${online} device(s) online`;
-  } else if (STATE.devices.length > 0) {
-    dot.className = 'status-dot offline';
-    text.textContent = `${STATE.devices.length} device(s), all offline`;
-  } else {
-    dot.className = 'status-dot offline';
-    text.textContent = 'No devices';
-  }
-}
-
-function updateDeviceHealth(serial, healthy) {
-  const dev = STATE.devices.find(d => d.serial === serial);
-  if (dev) dev.healthy = healthy;
-  updateStatus();
-}
-
-async function selectDevice(serial) {
-  STATE.selectedDevice = serial;
-  document.querySelectorAll('select[id$="-device-select"]').forEach(s => s.value = serial);
-  showToast(`Selected: ${serial}`);
-  loadOverview();
-}
-
-async function snapshotDevice(serial) {
-  showToast('Taking snapshot...');
-  const res = await api(`/api/device/${serial || STATE.selectedDevice}/snapshot`, { method: 'POST' });
-  renderSnapshot(res.snapshot);
-  showToast('Snapshot complete');
-}
-
-function renderSnapshot(snapshot) {
-  document.getElementById('device-info').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(snapshot.device,null,2)}</pre>`;
-  document.getElementById('media-player').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(snapshot.mediaPlayer,null,2)}</pre>`;
-  updateMetrics(snapshot);
-}
-
-function updateMetrics(snapshot) {
-  const apps = snapshot.apps?.length || 0;
-  const gfx = snapshot.graphicsFps || 'N/A';
-  const active = snapshot.activeApp?.['#text'] || snapshot.activeApp?.id || 'None';
-  document.getElementById('metrics-grid').innerHTML = `
-    <div class="card metric"><div class="value">${apps}</div><div class="label">Installed Apps</div></div>
-    <div class="card metric"><div class="value">${active}</div><div class="label">Active App</div></div>
-    <div class="card metric"><div class="value">${gfx}</div><div class="label">Graphics FPS</div></div>
-    <div class="card metric"><div class="value">${snapshot.errors?.length||0}</div><div class="label">Errors</div></div>
-  `;
-}
-
-// ─── Overview ───
-async function loadOverview() {
-  const serial = getSelectedDevice();
-  if (!serial) return;
-  const res = await api(`/api/device/${serial}`);
-  document.getElementById('device-info').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(res.deviceInfo,null,2)}</pre>`;
-  
-  const apps = res.apps || [];
-  document.getElementById('apps-list') && (document.getElementById('apps-list').innerHTML = 
-    `<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Version</th></tr></thead><tbody>
-    ${apps.map(a => `<tr><td>${a['@_id']||a.id||'?'}</td><td>${a['#text']||a.name||'?'}</td><td>${a['@_type']||a.type||''}</td><td>${a['@_version']||a.version||''}</td></tr>`).join('')}
-    </tbody></table>`);
-  
-  try {
-    const mp = await api(`/api/device/${serial}/media-player`);
-    document.getElementById('media-player').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(mp.player||mp,null,2)}</pre>`;
-  } catch(e) {}
-  
-  updateMetrics({ apps, activeApp: res.activeApp });
-}
-
-// ─── Remote ───
-async function sendKey(key) {
-  const serial = getSelectedDevice();
-  if (!serial) { showToast('Select a device first', 'error'); return; }
-  try {
-    await api(`/api/device/${serial}/keypress`, { method: 'POST', body: JSON.stringify({ key }) });
-  } catch(e) { showToast('Key failed', 'error'); }
-}
-
-async function sendText() {
-  const serial = getSelectedDevice();
-  const text = document.getElementById('text-input').value;
-  if (!serial || !text) return;
-  await api(`/api/device/${serial}/type`, { method: 'POST', body: JSON.stringify({ text }) });
-  document.getElementById('text-input').value = '';
-}
-
-// ─── Apps ───
-async function loadApps() {
-  const serial = document.getElementById('apps-device-select').value;
-  if (!serial) return;
-  const res = await api(`/api/device/${serial}/apps`);
-  document.getElementById('apps-list').innerHTML = 
-    `<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Version</th><th>Actions</th></tr></thead><tbody>
-    ${(res.apps||[]).map(a => `<tr>
-      <td style="font-family:var(--mono)">${a['@_id']||a.id||'?'}</td>
-      <td>${a['#text']||a.name||'?'}</td>
-      <td>${a['@_type']||a.type||''}</td>
-      <td>${a['@_version']||a.version||''}</td>
-      <td>
-        <button class="btn btn-sm" onclick="launchApp('${a['@_id']||a.id}')">Launch</button>
-      </td>
-    </tr>`).join('')}</tbody></table>`;
-}
-
-async function launchApp(appId) {
-  const id = appId || document.getElementById('launch-app-id').value;
-  const serial = getSelectedDevice() || document.getElementById('apps-device-select').value;
-  if (!serial || !id) { showToast('Need device and app ID', 'error'); return; }
-  const params = document.getElementById('launch-app-params')?.value || '';
-  await api(`/api/device/${serial}/launch`, { method: 'POST', body: JSON.stringify({ appId: id, params: params ? Object.fromEntries([params.split('=')]) : null }) });
-  showToast(`Launched ${id}`);
-}
-
-// ─── Registry ───
-async function loadRegistry() {
-  const serial = document.getElementById('registry-device-select').value;
-  if (!serial) return;
-  const search = document.getElementById('registry-search').value;
-  const category = document.getElementById('registry-category').value;
-  
-  let url = `/api/device/${serial}/registry?export=true`;
-  if (search) url += `&search=${encodeURIComponent(search)}`;
-  if (category) {
-    // Load known keys for category
-    const keysRes = await api(`/api/registry/known-keys?category=${category}`);
-    renderRegistry(keysRes.keys, serial);
-    return;
-  }
-  
-  const res = await api(url);
-  renderRegistryFromEntries(res.entries, serial);
-}
-
-async function renderRegistryFromEntries(entries, serial) {
-  const html = `<table><thead><tr><th>Key</th><th>Value</th><th>Section</th><th>Info</th></tr></thead><tbody>
-    ${entries.map(e => {
-      const info = e.known ? `${e.known.description} <span class="badge badge-${e.known.category}">${e.known.category}</span>` : '';
-      return `<tr>
-        <td style="font-family:var(--mono)">${e.key}</td>
-        <td style="font-family:var(--mono);word-break:break-all;max-width:300px">${e.value}</td>
-        <td>${e.section||''}</td>
-        <td style="font-size:0.8em">${info}</td>
-      </tr>`;
-    }).join('')}</tbody></table>`;
-  document.getElementById('registry-table').innerHTML = html;
-}
-
-function renderRegistry(keys, serial) {
-  const html = `<table><thead><tr><th>Key</th><th>Description</th><th>Category</th><th>Default</th><th>Type</th></tr></thead><tbody>
-    ${Object.entries(keys).map(([k,v]) => `<tr>
-      <td style="font-family:var(--mono)">${k}</td>
-      <td>${v.description}</td>
-      <td><span class="badge badge-${v.category}">${v.category}</span></td>
-      <td>${v.defaultValue||''}</td>
-      <td>${v.type||''}${v.readOnly?' (RO)':''}</td>
-    </tr>`).join('')}</tbody></table>`;
-  document.getElementById('registry-table').innerHTML = html;
-}
-
-async function runPrivacyAudit() {
-  const serial = document.getElementById('registry-device-select').value;
-  if (!serial) return;
-  const res = await api(`/api/device/${serial}/registry?audit=privacy`);
-  const html = `<table><thead><tr><th>Key</th><th>Description</th><th>Current</th><th>Status</th><th>Recommend</th></tr></thead><tbody>
-    ${res.audit.map(a => `<tr>
-      <td style="font-family:var(--mono)">${a.key}</td>
-      <td>${a.description}</td>
-      <td>${a.currentValue}</td>
-      <td><span class="badge badge-${a.status==='enabled'?'tracking':'privacy'}">${a.status}</span></td>
-      <td>${a.recommended}</td>
-    </tr>`).join('')}</tbody></table>`;
-  document.getElementById('registry-table').innerHTML = html;
-  showToast('Privacy audit complete');
-}
-
-// ─── Performance ───
-async function loadPerf() {
-  const serial = getSelectedDevice();
-  if (!serial) return;
-  
-  try {
-    const chanperf = await api(`/api/device/${serial}/chanperf`);
-    document.getElementById('chanperf-data').textContent = JSON.stringify(chanperf.perf||chanperf, null, 2);
-  } catch(e) { document.getElementById('chanperf-data').textContent = 'Not available (dev mode required)'; }
-  
-  try {
-    const gfx = await api(`/api/device/${serial}/graphics-fps`);
-    document.getElementById('gfx-data').textContent = JSON.stringify(gfx.gfx||gfx, null, 2);
-  } catch(e) { document.getElementById('gfx-data').textContent = 'Not available'; }
-  
-  try {
-    const bmp = await api(`/api/device/${serial}/bitmaps`);
-    document.getElementById('bitmap-data').textContent = JSON.stringify(bmp.bitmaps||bmp, null, 2);
-  } catch(e) { document.getElementById('bitmap-data').textContent = 'Not available'; }
-}
-
-// ─── SceneGraph ───
-async function loadSGNodes(scope) {
-  const serial = document.getElementById('sg-device-select').value || getSelectedDevice();
-  if (!serial) return;
-  let url = `/api/device/${serial}/sgnodes`;
-  if (scope === 'roots') url += '?scope=roots';
-  if (scope === 'count') url += '?countOnly=true';
-  const res = await api(url);
-  document.getElementById('sg-data').textContent = JSON.stringify(res.result, null, 2);
-}
-
-// ─── Stream Proxy ───
-async function loadProxyStatus() {
-  try {
-    const res = await api('/api/proxy/status');
-    document.getElementById('proxy-metrics').innerHTML = `
-      <div class="card metric"><div class="value">${res.totalRequests||0}</div><div class="label">Total Requests</div></div>
-      <div class="card metric good"><div class="value">${res.adsBlocked||0}</div><div class="label">Ads Blocked</div></div>
-      <div class="card metric"><div class="value">${res.activeStreams||0}</div><div class="label">Active Streams</div></div>
-      <div class="card metric warn"><div class="value">${formatBytes(res.bytesProxied||0)}</div><div class="label">Data Proxied</div></div>
-    `;
-  } catch(e) { /* proxy not running */ }
-}
-
-let adBlockEnabled = true;
-let qualityFilterEnabled = true;
-
-async function toggleAdBlock() {
-  const btn = document.getElementById('ad-block-toggle');
-  adBlockEnabled = !adBlockEnabled;
-  btn.textContent = `Ad Block: ${adBlockEnabled ? 'ON' : 'OFF'}`;
-  try {
-    await api('/api/proxy/config', { method: 'POST', body: JSON.stringify({ adBlocking: { enabled: adBlockEnabled } }) });
-  } catch(e) { /* non-fatal */ }
-}
-
-async function toggleQuality() {
-  const btn = document.getElementById('quality-toggle');
-  qualityFilterEnabled = !qualityFilterEnabled;
-  btn.textContent = `Quality Filter: ${qualityFilterEnabled ? 'ON' : 'OFF'}`;
-  try {
-    await api('/api/proxy/config', { method: 'POST', body: JSON.stringify({ quality: { enabled: qualityFilterEnabled } }) });
-  } catch(e) { /* non-fatal */ }
-}
-
-function updateBitrate(val) {
-  document.getElementById('bitrate-label').textContent = `${val} Mbps`;
-}
-
-function updateResolution(val) {
-  // Will send to proxy config
-}
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/(1024*1024)).toFixed(1) + ' MB';
-}
-
-// ─── Toast ───
-function showToast(msg, type = 'info') {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--accent2)';
-  toast.className = 'toast show';
-  setTimeout(() => toast.className = 'toast', 2500);
-}
-
-// ─── Init ───
-connectWS();
-discover();
-loadProxyStatus();
+// Init
+wsConnect();discover(false);loadProxyStatus();setupRemote();
+setInterval(()=>{loadProxyStatus();if(S.serial&&currentPanel==='overview')loadOverview()},5000);
 </script>
 </body>
 </html>
