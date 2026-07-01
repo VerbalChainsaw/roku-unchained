@@ -332,6 +332,42 @@ app.get('/api/device/:serial/bitmaps', async (req, res) => {
 
 // ─── Remote Control ───────────────────────────────────────────────
 
+/** POST /api/device/:serial/sequence — Run a sequence of keys */
+app.post('/api/device/:serial/sequence', async (req, res) => {
+  const client = clients.get(req.params.serial);
+  if (!client) return res.status(404).json({ success: false, error: 'No client' });
+  try {
+    const { keys, delay_ms } = req.body;
+    if (!keys || !Array.isArray(keys) || keys.length === 0)
+      return res.status(400).json({ success: false, error: 'keys array required' });
+    const delay = Math.min(Math.max(parseInt(delay_ms || '180', 10) || 180, 50), 1000);
+    for (let i = 0; i < keys.length; i++) {
+      await client.keypress(keys[i]);
+      if (i < keys.length - 1) await new Promise(r => setTimeout(r, delay));
+    }
+    res.json({ success: true, keys, count: keys.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** POST /api/device/:serial/deeplink — Deep-link launch with contentId */
+app.post('/api/device/:serial/deeplink', async (req, res) => {
+  const client = clients.get(req.params.serial);
+  if (!client) return res.status(404).json({ success: false, error: 'No client' });
+  try {
+    const { appId, content_id, media_type, source } = req.body;
+    if (!appId || !content_id || !media_type)
+      return res.status(400).json({ success: false, error: 'appId, content_id, and media_type required' });
+    const params = { contentId: content_id, mediaType: media_type };
+    if (source) params.source = source;
+    await client.launchApp(appId, params);
+    res.json({ success: true, appId, content_id, media_type });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /** POST /api/device/:serial/keypress */
 app.post('/api/device/:serial/keypress', async (req, res) => {
   const client = clients.get(req.params.serial);

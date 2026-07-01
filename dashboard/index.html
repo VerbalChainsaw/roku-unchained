@@ -148,6 +148,8 @@ input[type=range]{width:100%;accent-color:var(--a1);height:6px}
       <button class="nav-item" data-panel="remote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>Remote</span></button>
       <button class="nav-item" data-panel="apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Apps</span></button>
       <button class="nav-item" data-panel="registry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><span>Registry</span></button>
+      <button class="nav-item" data-panel="macros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Macros</span></button>
+      <button class="nav-item" data-panel="devtools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><span>Dev Tools</span></button>
       <button class="nav-item" data-panel="proxy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10M12 2a15.3 15.3 0 00-4 10 15.3 15.3 0 004 10"/></svg><span>Stream Proxy</span><span class="badge" id="proxy-badge">ON</span></button>
       <button class="nav-item" data-panel="console"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Console</span></button>
       <button class="nav-item" data-panel="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help</span></button>
@@ -282,6 +284,67 @@ curl http://localhost:9090/proxy/recordings</pre>
         <div class="card"><div class="card-header">Event Console</div><div class="console" id="console-out"><span style="color:var(--t3)">Waiting for events...</span></div></div>
       </div>
 
+      <!-- MACROS -->
+      <div id="panel-macros" class="hidden">
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header">Custom Sequence</div>
+          <p style="color:var(--t3);font-size:13px;margin-bottom:8px">Comma-separated ECP keys. Example: Home, Home, Up, Up, Left, Right</p>
+          <div style="display:flex;gap:8px">
+            <input id="macro-sequence" placeholder="Home, Home, Up, Up, Left, Right" style="flex:1;font-family:var(--mono)">
+            <input id="macro-delay" type="number" value="180" min="50" max="1000" style="width:80px" title="Delay ms between keys">
+            <button class="btn primary" onclick="runCustomSequence()">Run</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header">Save Macro</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <input id="macro-name" placeholder="Macro name" style="flex:1;min-width:150px">
+            <input id="macro-notes" placeholder="Notes (optional)" style="flex:1;min-width:150px">
+            <button class="btn green" onclick="saveCurrentMacro()">Save</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="btn sm" onclick="exportMacros()">Export JSON</button>
+            <button class="btn sm" onclick="importMacros()">Import JSON</button>
+          </div>
+          <textarea id="macro-json" class="console" style="height:80px;margin-bottom:8px;display:none" placeholder="JSON import/export"></textarea>
+        </div>
+        <div class="card">
+          <div class="card-header">Saved Macros</div>
+          <div id="macro-list"></div>
+        </div>
+      </div>
+
+      <!-- DEV TOOLS -->
+      <div id="panel-devtools" class="hidden">
+        <div class="grid g4" id="dev-metrics" style="margin-bottom:12px"></div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="card-header">Developer Mode Status</div>
+          <div id="dev-status"><div class="empty-state"><p>Select a device to check developer mode status.</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">Enable Developer Mode</div>
+          <div id="dev-instructions">
+            <p style="color:var(--t3);font-size:13px;line-height:1.7;margin-bottom:8px">On your Roku remote, press the following sequence from the Home screen to open the Developer Settings menu:</p>
+            <pre style="background:var(--c0);padding:12px;border-radius:var(--rds);font-family:var(--mono);font-size:13px;color:var(--a1)">
+Home  × 3
+Up    × 2
+Right
+Left
+Right
+Left
+Right</pre>
+            <p style="color:var(--t3);font-size:13px;line-height:1.7;margin-top:8px">Once enabled, the TV exposes a web installer at its IP address on port 80. You can then sideload Roku channel packages (ZIP) from any browser.</p>
+            <div id="dev-installer-link" style="margin-top:12px;display:none">
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="color:var(--g1);font-weight:600">Installer ready at:</span>
+                <a id="dev-url" href="#" target="_blank" style="font-family:var(--mono)"></a>
+                <button class="btn green sm" onclick="openDevInstaller()">Open</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- HELP -->
       <div id="panel-help" class="hidden">
         <div class="card" style="margin-bottom:12px"><div class="card-header">Stream Proxy</div>
@@ -352,7 +415,7 @@ let currentPanel='overview';
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentPanel=b.dataset.panel;$('toolbar-title').textContent=b.querySelector('span')?.textContent||'Dashboard';document.querySelectorAll('[id^="panel-"]').forEach(p=>p.classList.add('hidden'));const panel=$(currentPanel==='console'?'panel-console':'panel-'+currentPanel);if(panel)panel.classList.remove('hidden');loadCurrentPanel()}));
 
 function loadCurrentPanel(){
-  const m={overview:loadOverview,remote:null,apps:loadApps,registry:loadRegistry,'proxy':loadProxyStatus,console:renderConsole,help:null};
+  const m={overview:loadOverview,remote:null,apps:loadApps,registry:loadRegistry,macros:loadMacros,devtools:loadDevTools,'proxy':loadProxyStatus,console:renderConsole,help:null};
   if(m[currentPanel])m[currentPanel]();
 }
 function setupRemote(){
@@ -422,7 +485,63 @@ ${b.substring(0,2000)}${b.length>2000?'\n...truncated...':''}`
 // Console
 function renderConsole(){const o=$('console-out');if(!o)return;o.innerHTML=S.logs.slice(0,100).map(l=>`<div class="entry"><span class="ts">${l.ts||''}</span> <span class="lv ${l.type==='error'?'err':l.type==='ad_blocked'?'ok':''}">${l.type||''}</span> <span class="msg">${JSON.stringify(l).substring(0,200)}</span></div>`).join('')||'<span style="color:var(--t3)">Waiting for events...</span>'}
 
-// Keyboard shortcuts
+// Macros state
+const macroState = {list: []};
+function loadSavedMacros(){
+  try{macroState.list=JSON.parse(localStorage.getItem('ruMacros')||'[]')}catch{macroState.list=[]}
+  renderMacros();
+}
+function saveMacros(){localStorage.setItem('ruMacros',JSON.stringify(macroState.list))}
+function renderMacros(){
+  const el=$('macro-list');
+  if(!macroState.list.length){el.innerHTML='<div class="empty-state"><p style="padding:20px;color:var(--t3)">No saved macros yet. Create one above.</p></div>';return}
+  el.innerHTML='<table class="tbl"><thead><tr><th>Name</th><th>Keys</th><th></th></tr></thead><tbody>'+macroState.list.map((m,i)=>'<tr><td><strong>'+m.name+'</strong>'+(m.notes?'<br><span style="font-size:11px;color:var(--t3)">'+m.notes+'</span>':'')+'</td><td style="font-size:11px;font-family:var(--mono)">'+(m.sequence||[]).join(', ')+'</td><td><button class="btn sm primary" onclick="runMacro('+i+')">Run</button> <button class="btn sm red" onclick="deleteMacro('+i+')">Del</button></td></tr>').join('')+'</tbody></table>';
+}
+function saveCurrentMacro(){
+  const seq=$('macro-sequence').value.trim(),name=$('macro-name').value.trim(),notes=$('macro-notes').value.trim();
+  if(!name){toast('Name the macro','err');return}
+  const keys=seq.split(/[,\s]+/).filter(Boolean);
+  if(!keys.length){toast('Add at least one key','err');return}
+  const delay=parseInt($('macro-delay').value)||180;
+  loadSavedMacros();
+  macroState.list.unshift({id:'m'+Date.now(),name,sequence:keys,delay_ms:delay,notes});
+  saveMacros();renderMacros();
+  $('macro-name').value='';$('macro-notes').value='';
+  toast('Saved: '+name);
+}
+function deleteMacro(i){macroState.list.splice(i,1);saveMacros();renderMacros()}
+async function runMacro(i){
+  const m=macroState.list[i];if(!m||!S.serial){toast('Select a device','err');return}
+  try{await api('/api/device/'+S.serial+'/sequence',{method:'POST',body:JSON.stringify({keys:m.sequence,delay_ms:m.delay_ms})});toast('Ran: '+m.name)}catch{toast('Macro failed','err')}
+}
+async function runCustomSequence(){
+  const seq=$('macro-sequence').value.trim();if(!seq||!S.serial){toast('Need sequence + device','err');return}
+  const keys=seq.split(/[,\s]+/).filter(Boolean),delay=parseInt($('macro-delay').value)||180;
+  try{await api('/api/device/'+S.serial+'/sequence',{method:'POST',body:JSON.stringify({keys,delay_ms:delay})});toast('Ran custom sequence')}catch{toast('Sequence failed','err')}
+}
+function exportMacros(){const j=$('macro-json');j.value=JSON.stringify(macroState.list,null,2);j.style.display='';j.select();toast('Exported to JSON box')}
+function importMacros(){
+  const j=$('macro-json');j.style.display='';
+  try{const p=JSON.parse(j.value);if(!Array.isArray(p))throw 0;macroState.list=p;saveMacros();renderMacros();toast('Imported '+p.length+' macro(s)')}catch{toast('Invalid JSON','err')}
+}
+function loadMacros(){loadSavedMacros()}
+
+// Dev Tools
+async function loadDevTools(){
+  if(!S.serial){$('dev-status').innerHTML='<div class="empty-state"><p>Select a device first.</p></div>';return}
+  try{
+    const r=await api('/api/device/'+S.serial+'/device-info');
+    const info=r.info;
+    const devEnabled=info?.['developer-enabled']?.['#text']||info?.['developer-enabled']||'false';
+    const isDev=devEnabled==='true';
+    const ip=S.devices.find(d=>d.serial===S.serial)?.ip||'';
+    $('dev-metrics').innerHTML='<div class="card metric"><div class="val '+(isDev?'g':'r')+'">'+(isDev?'ON':'OFF')+'</div><div class="lbl">Developer Mode</div></div>'+
+      '<div class="card metric"><div class="val">'+ip+'</div><div class="lbl">Device IP</div></div>';
+    const link=$('dev-installer-link');
+    if(isDev&&ip){link.style.display='';$('dev-url').textContent='http://'+ip+'/';$('dev-url').href='http://'+ip+'/'}else{link.style.display='none'}
+  }catch(e){$('dev-status').innerHTML='<div class="empty-state"><p>Error: '+e.message+'</p></div>'}
+}
+function openDevInstaller(){window.open($('dev-url').href,'_blank')}
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
   const km={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',Enter:'Select',Escape:'Back',Backspace:'Back',h:'Home',p:'PlayPause',m:'VolumeMute'};
