@@ -461,6 +461,27 @@ app.post('/api/proxy/config', (req, res) => {
   }
 });
 
+/** GET /api/proxy/test?url=... — Test proxy with a URL via this server (no cross-port issues) */
+app.get('/api/proxy/test', async (req, res) => {
+  const targetUrl = req.query.url;
+  if (!targetUrl) return res.status(400).json({ success: false, error: 'url query param required' });
+  try {
+    const { get } = http;
+    const proxyResp = await new Promise((resolve, reject) => {
+      get(`http://127.0.0.1:${STREAM_PROXY_PORT}/proxy/${encodeURIComponent(targetUrl)}`, (r) => {
+        const chunks = [];
+        r.on('data', c => chunks.push(c));
+        r.on('end', () => resolve({ status: r.statusCode, headers: r.headers, body: Buffer.concat(chunks).toString('utf8') }));
+        r.on('error', reject);
+      }).on('error', reject).setTimeout(10000);
+    });
+    const stats = getProxySnapshot();
+    res.json({ success: true, result: proxyResp, proxyStats: stats });
+  } catch (err) {
+    res.status(502).json({ success: false, error: err.message });
+  }
+});
+
 // ─── Key Reference ────────────────────────────────────────────────
 
 /** GET /api/keys — List all known remote control keys */
@@ -520,15 +541,43 @@ async function startup() {
   console.log('  ╚══════════════════════════════════════╝');
   console.log('');
 
-  // Start stream proxy
+  // Start stream proxy with port conflict retry
+  let proxyPort = STREAM_PROXY_PORT;
   streamProxyServer = createStreamProxy();
-  await new Promise(r => streamProxyServer.listen(STREAM_PROXY_PORT, '0.0.0.0', r));
-  console.log(`  Stream Proxy   →  http://0.0.0.0:${STREAM_PROXY_PORT}`);
+  while (true) {
+    try {
+      await new Promise((r, j) => {
+        streamProxyServer.once('error', j);
+        streamProxyServer.listen(proxyPort, '0.0.0.0', () => { streamProxyServer.removeAllListeners('error'); r(); });
+      });
+      break;
+    } catch (e) {
+      if (e.code === 'EADDRINUSE') {
+        console.log(`  Port ${proxyPort} in use, trying ${proxyPort + 1}...`);
+        proxyPort++;
+      } else throw e;
+    }
+  }
+  console.log(`  Stream Proxy   →  http://0.0.0.0:${proxyPort}`);
   
-  // Start main server  
-  await new Promise(r => server.listen(PORT, HOST, r));
-  console.log(`  Dashboard      →  http://${HOST}:${PORT}`);
-  console.log(`  API            →  http://${HOST}:${PORT}/api`);
+  // Start main server with port conflict retry
+  let mainPort = PORT;
+  while (true) {
+    try {
+      await new Promise((r, j) => {
+        server.once('error', j);
+        server.listen(mainPort, HOST, () => { server.removeAllListeners('error'); r(); });
+      });
+      break;
+    } catch (e) {
+      if (e.code === 'EADDRINUSE') {
+        console.log(`  Port ${mainPort} in use, trying ${mainPort + 1}...`);
+        mainPort++;
+      } else throw e;
+    }
+  }
+  console.log(`  Dashboard      →  http://${HOST}:${mainPort}`);
+  console.log(`  API            →  http://${HOST}:${mainPort}/api`);
   console.log('');
 
   // Auto-discover

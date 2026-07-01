@@ -462,6 +462,7 @@ Active Streams: ${stats.activeStreams}</pre>
             const finalHeaders = { ...proxyRes.headers };
             if (processed) {
               delete finalHeaders['content-length'];
+              delete finalHeaders['transfer-encoding'];
               finalHeaders['content-length'] = Buffer.byteLength(contentStr);
               delete finalHeaders['content-encoding'];
             }

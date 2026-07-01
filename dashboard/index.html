@@ -265,6 +265,14 @@ curl http://localhost:9090/proxy/recordings</pre>
             </div>
           </div>
         </div>
+        <div class="card" style="margin-top:12px"><div class="card-header">Test Proxy</div>
+          <p style="color:var(--t3);font-size:13px;margin-bottom:8px">Paste any stream URL to see what the proxy does to it.</p>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="proxy-test-url" placeholder="https://example.com/stream.m3u8" style="flex:1">
+            <button class="btn primary" onclick="testProxy()">Test</button>
+          </div>
+          <div id="proxy-test-result" style="background:var(--c0);border-radius:var(--rds);padding:12px;font-family:var(--mono);font-size:11px;color:var(--t3);min-height:40px;max-height:300px;overflow:auto;white-space:pre-wrap">Enter a stream URL and click Test.</div>
+        </div>
       </div>
 
       <!-- CONSOLE -->
@@ -384,6 +392,27 @@ async function toggleAdBlock(){S.adBlock=!S.adBlock;const b=$('ad-toggle-btn');b
 async function toggleQuality(){S.qualFilter=!S.qualFilter;const b=$('qual-toggle-btn');b.textContent=`Quality Filter: ${S.qualFilter?'ON':'OFF'}`;b.className=`btn ${S.qualFilter?'green':'red'}`;try{await api('/api/proxy/config',{method:'POST',body:JSON.stringify({quality:{enabled:S.qualFilter}})})}catch{}}
 function updateBitrate(v){$('br-lbl').textContent=`${v} Mbps`}
 function updateResolution(v){}
+
+async function testProxy(){
+  const url=$('proxy-test-url').value.trim();
+  if(!url){toast('Enter a stream URL','err');return}
+  const out=$('proxy-test-result');
+  out.innerHTML='<span style="color:var(--y1)">Testing...</span>';
+  try{
+    const r=await api(`/api/proxy/test?url=${encodeURIComponent(url)}`);
+    const b=r.result.body;
+    out.innerHTML=`<span style="color:var(--g1)">✓ Proxied successfully</span>
+<span style="color:var(--t3)">URL:</span> ${url}
+<span style="color:var(--t3)">Status:</span> ${r.result.status}
+<span style="color:var(--t3)">Size:</span> ${b.length} bytes
+<span style="color:var(--t3)">Ads blocked session:</span> ${r.proxyStats.adsBlocked}
+
+<span style="color:var(--t3)">Response:</span>
+${b.substring(0,2000)}${b.length>2000?'\n...truncated...':''}`
+  }catch(e){
+    out.innerHTML=`<span style="color:var(--r1)">✗ Failed:</span> ${e.message}`
+  }
+}
 
 // Console
 function renderConsole(){const o=$('console-out');if(!o)return;o.innerHTML=S.logs.slice(0,100).map(l=>`<div class="entry"><span class="ts">${l.ts||''}</span> <span class="lv ${l.type==='error'?'err':l.type==='ad_blocked'?'ok':''}">${l.type||''}</span> <span class="msg">${JSON.stringify(l).substring(0,200)}</span></div>`).join('')||'<span style="color:var(--t3)">Waiting for events...</span>'}
