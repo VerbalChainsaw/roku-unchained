@@ -150,6 +150,7 @@ input[type=range]{width:100%;accent-color:var(--a1);height:6px}
       <button class="nav-item" data-panel="registry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><span>Registry</span></button>
       <button class="nav-item" data-panel="proxy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10M12 2a15.3 15.3 0 00-4 10 15.3 15.3 0 004 10"/></svg><span>Stream Proxy</span><span class="badge" id="proxy-badge">ON</span></button>
       <button class="nav-item" data-panel="console"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg><span>Console</span></button>
+      <button class="nav-item" data-panel="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help</span></button>
     </nav>
     <div class="sidebar-footer">
       <span class="dot off" id="status-dot"></span>
@@ -231,6 +232,20 @@ input[type=range]{width:100%;accent-color:var(--a1);height:6px}
       <!-- STREAM PROXY -->
       <div id="panel-proxy" class="hidden">
         <div class="grid g4" id="proxy-metrics"></div>
+        <div class="card" style="margin-top:12px"><div class="card-header">How to Use</div>
+          <p style="color:var(--t3);font-size:13px;line-height:1.7;margin-bottom:8px">Route any video stream through the proxy by prepending <code style="background:var(--c3);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:12px">http://localhost:9090/proxy/</code> to the stream URL. The proxy strips ads, filters quality, and logs everything.</p>
+          <pre style="background:var(--c0);padding:12px;border-radius:var(--rds);font-family:var(--mono);font-size:11px;color:var(--a1);overflow-x:auto"># Example: proxy any HLS stream
+http://localhost:9090/proxy/https://example.com/stream.m3u8
+
+# Check stats
+curl http://localhost:9090/proxy/status
+
+# Health check
+curl http://localhost:9090/proxy/health
+
+# List recordings
+curl http://localhost:9090/proxy/recordings</pre>
+        </div>
         <div class="card" style="margin-top:12px">
           <div class="card-header">Controls</div>
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -256,6 +271,46 @@ input[type=range]{width:100%;accent-color:var(--a1);height:6px}
       <div id="panel-console" class="hidden">
         <div class="card"><div class="card-header">Event Console</div><div class="console" id="console-out"><span style="color:var(--t3)">Waiting for events...</span></div></div>
       </div>
+
+      <!-- HELP -->
+      <div id="panel-help" class="hidden">
+        <div class="card" style="margin-bottom:12px"><div class="card-header">Stream Proxy</div>
+          <p style="color:var(--t3);font-size:13px;line-height:1.7;margin-bottom:8px">Proxy your Roku's traffic through the toolkit. Works with HLS (.m3u8) and DASH (.mpd) streams. Auto-strips ads using 20+ detection patterns.</p>
+          <pre style="background:var(--c0);padding:12px;border-radius:var(--rds);font-family:var(--mono);font-size:11px;color:var(--a1);overflow-x:auto"># Proxy a stream:
+http://localhost:9090/proxy/STREAM_URL
+
+# Live stats:
+http://localhost:9090/proxy/status</pre>
+        </div>
+        <div class="card"><div class="card-header">REST API</div>
+          <p style="color:var(--t3);font-size:13px;line-height:1.7;margin-bottom:8px">All device control is exposed via REST. Use from any language or command line.</p>
+          <pre style="background:var(--c0);padding:12px;border-radius:var(--rds);font-family:var(--mono);font-size:11px;color:var(--a1);overflow-x:auto;white-space:pre-wrap"># Discover devices
+curl http://localhost:4700/api/discover
+
+# List devices
+curl http://localhost:4700/api/devices
+
+# Device info (replace SERIAL)
+curl http://localhost:4700/api/device/SERIAL/device-info
+
+# List apps
+curl http://localhost:4700/api/device/SERIAL/apps
+
+# Press a key
+curl -X POST http://localhost:4700/api/device/SERIAL/keypress -H "Content-Type: application/json" -d '{"key":"Home"}'
+
+# Registry
+curl http://localhost:4700/api/device/SERIAL/registry?export=true
+
+# Privacy audit
+curl http://localhost:4700/api/device/SERIAL/registry?audit=privacy
+
+# Proxy status
+curl http://localhost:4700/api/proxy/status
+
+# System status
+curl http://localhost:4700/api/status</pre>
+        </div>
     </div>
   </main>
 </div>
@@ -287,7 +342,7 @@ let currentPanel='overview';
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentPanel=b.dataset.panel;$('toolbar-title').textContent=b.querySelector('span')?.textContent||'Dashboard';document.querySelectorAll('[id^="panel-"]').forEach(p=>p.classList.add('hidden'));const panel=$(currentPanel==='console'?'panel-console':'panel-'+currentPanel);if(panel)panel.classList.remove('hidden');loadCurrentPanel()}));
 
 function loadCurrentPanel(){
-  const m={overview:loadOverview,remote:null,apps:loadApps,registry:loadRegistry,'proxy':loadProxyStatus,console:renderConsole};
+  const m={overview:loadOverview,remote:null,apps:loadApps,registry:loadRegistry,'proxy':loadProxyStatus,console:renderConsole,help:null};
   if(m[currentPanel])m[currentPanel]();
 }
 function setupRemote(){
@@ -308,7 +363,7 @@ function renderMetrics(sn){
   $('metrics-grid').innerHTML=`<div class="card metric"><div class="val">${a}</div><div class="lbl">Installed Apps</div></div><div class="card metric"><div class="val">${ac}</div><div class="lbl">Active App</div></div><div class="card metric"><div class="val ${g>30?'g':''}">${g}</div><div class="lbl">Graphics FPS</div></div><div class="card metric"><div class="val ${er>0?'r':''}">${er}</div><div class="lbl">Errors</div></div>`;
 }
 
-async function loadOverview(){if(!S.serial)return;const r=await api(`/api/device/${S.serial}`);$('device-info').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(r.deviceInfo,null,2)}</pre>`;try{const mp=await api(`/api/device/${S.serial}/media-player`);$('media-player').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(mp.player||mp,null,2)}</pre>`}catch{}$('apps-list').innerHTML=`<table class="tbl"><thead><tr><th>ID</th><th>Name</th><th></th></tr></thead><tbody>${(r.apps||[]).map(a=>`<tr><td>${a['@_id']||a.id||'?'}</td><td>${a['#text']||a.name||'?'}</td><td><button class="btn sm" onclick="launchApp('${a['@_id']||a.id}')">Launch</button></td></tr>`).join('')}</tbody></table>`;renderMetrics({apps:r.apps,activeApp:r.activeApp})}
+async function loadOverview(){if(!S.serial)return;try{const r=await api(`/api/device/${S.serial}`);$('device-info').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(r.deviceInfo,null,2)}</pre>`;try{const mp=await api(`/api/device/${S.serial}/media-player`);$('media-player').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(mp.player||mp,null,2)}</pre>`}catch{}renderMetrics({apps:r.apps,activeApp:r.activeApp})}catch{}}
 
 // Remote
 async function sendKey(k,el){if(!S.serial){toast('Select a device','err');return}if(el)el.classList.add('pressed');try{await api(`/api/device/${S.serial}/keypress`,{method:'POST',body:JSON.stringify({key:k})})}catch{toast('Key failed','err')}}
@@ -349,7 +404,7 @@ document.querySelectorAll('#remote-pad button[data-key]').forEach(b=>{
 });
 
 // Init
-wsConnect();discover(false);loadProxyStatus();setupRemote();
+wsConnect();discover();loadProxyStatus();setupRemote();loadCurrentPanel();
 setInterval(()=>{loadProxyStatus();if(S.serial&&currentPanel==='overview')loadOverview()},5000);
 </script>
 </body>
