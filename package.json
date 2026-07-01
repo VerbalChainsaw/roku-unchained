@@ -4,12 +4,12 @@
   "description": "Complete Roku Dev Toolkit + Stream Proxy — hardware freedom suite",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "pwsh -File start.ps1",
+    "stop": "pwsh -Command \"Get-NetTCPConnection -LocalPort (4700..4710+9090..9099) -EA 0 | ForEach { Stop-Process -Id `$_.OwningProcess -Force -EA 0 }; Write-Host 'Stopped'\"",
+    "dev": "node server.js",
     "scan": "node -e \"const s=require('./lib/scanner');s.discover().then(devices=>console.log(JSON.stringify(devices,null,2)))\"",
     "ecp": "node -e \"const e=require('./lib/ecp');const c=new e.ECPClient(process.argv[2]);c.deviceInfo().then(d=>console.log(JSON.stringify(d,null,2)))\"",
-    "proxy": "node proxy/stream-proxy.js",
-    "test": "node -e \"require('./lib/ecp');require('./lib/registry');require('./lib/scanner');require('./proxy/stream-proxy');console.log('All modules load OK')\""
+    "test": "node tests/verify.js"
   },
   "dependencies": {
     "express": "^4.18.2",

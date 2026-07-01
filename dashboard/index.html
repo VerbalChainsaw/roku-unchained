@@ -170,8 +170,10 @@ input[type=range]{width:100%;accent-color:var(--a1);height:6px}
     <div id="toolbar"><h2 id="toolbar-title">Dashboard</h2>
       <div class="toolbar-actions">
         <select id="device-picker" style="width:auto;min-width:180px" onchange="selectDevice(this.value)"><option>No devices found</option></select>
+        <input id="manual-ip" placeholder="IP address" style="width:130px;display:none" onkeydown="if(event.key==='Enter')addManualDevice()">
+        <button class="btn" onclick="toggleManualIP()" id="manual-btn">+ IP</button>
         <button class="btn primary" onclick="discover()" id="scan-btn">Scan Network</button>
-        <button class="btn ghost sm" onclick="loadCurrentPanel()">↻ Refresh</button>
+        <button class="btn ghost sm" onclick="loadCurrentPanel()">↻</button>
       </div>
     </div>
 
@@ -362,6 +364,9 @@ async function discover(note=true){if(note)toast('Scanning network...',null);try
 function renderDevices(){const s=$('device-picker'),v=s.value;let opts='<option value="">Select device...</option>';S.devices.forEach(d=>opts+=`<option value="${d.serial}">${d.serial||'?'} — ${d.ip}</option>`);s.innerHTML=opts;if(v&&S.devices.some(d=>d.serial===v))s.value=v;if(S.serial&&S.devices.some(d=>d.serial===S.serial))s.value=S.serial}
 function renderStatus(){const d=$('status-dot'),t=$('status-text'),o=S.devices.filter(x=>x.healthy).length;if(o>0){d.className='dot ok';t.textContent=`${o} device(s) online`}else if(S.devices.length>0){d.className='dot off';t.textContent=`${S.devices.length} offline`}else{d.className='dot off';t.textContent='No devices'}}
 function selectDevice(s){if(!s)return;S.serial=s;$('device-picker').value=s;toast(`Selected: ${s}`);loadCurrentPanel()}
+
+function toggleManualIP(){const inp=$('manual-ip'),btn=$('manual-btn');if(inp.style.display==='none'){inp.style.display='';btn.textContent='Add';inp.focus()}else{addManualDevice()}}
+async function addManualIP(){const ip=$('manual-ip').value.trim();if(!ip)return;toast(`Adding ${ip}...`);try{const r=await api('/api/device/add',{method:'POST',body:JSON.stringify({ip})});const d=r.device;S.devices.push(d);renderDevices();selectDevice(d.serial);toast(`Added ${d.serial} @ ${ip}`);$('manual-ip').value='';$('manual-ip').style.display='none';$('manual-btn').textContent='+ IP'}catch{toast('Failed — is the IP correct?','err')}}
 
 async function snapshotDevice(s){toast('Capturing snapshot...');const r=await api(`/api/device/${s||S.serial}/snapshot`,{method:'POST'});renderSnapshot(r.snapshot,s||S.serial);toast('Snapshot complete')}
 function renderSnapshot(sn,sr){if(sn.device)$('device-info').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(sn.device,null,2)}</pre>`;if(sn.mediaPlayer)$('media-player').innerHTML=`<pre style="font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;font-family:var(--mono);color:var(--t2)">${JSON.stringify(sn.mediaPlayer,null,2)}</pre>`;renderMetrics(sn)}

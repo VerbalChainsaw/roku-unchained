@@ -99,17 +99,57 @@ function getProxySnapshot() {
 app.get('/api/discover', async (req, res) => {
   try {
     const devices = await deviceManager.discover();
-    // Create clients for each discovered device
-    for (const dev of devices) {
-      if (!clients.has(dev.serial)) {
-        clients.set(dev.serial, new ECPClient(dev.ip));
-      }
-      if (!registryTools.has(dev.serial)) {
-        registryTools.set(dev.serial, new RegistryTool(dev.ip));
+
+    // If SSDP found nothing, try active scanning on common subnets
+    if (devices.length === 0 && req.query.scan !== 'false') {
+      const nets = getLocalNetworks();
+      for (const net of nets) {
+        const subnet = net.address.split('.').slice(0, 3).join('.');
+        const hosts = await quickScan(subnet, 500);
+        for (const ip of hosts) {
+          const client = new ECPClient(ip);
+          try {
+            const info = await client.deviceInfo();
+            const serial = info?.['serial-number']?.['#text'] || info?.['serial-number'] || ip;
+            devices.push({ serial: String(serial), ip, url: `http://${ip}:8060/`, healthy: true, server: info?.['model-name']?.['#text'] || 'Roku', discoveredAt: new Date().toISOString() });
+          } catch { /* not a Roku or not responding */ }
+        }
       }
     }
-    broadcast({ type: 'devices', devices });
-    res.json({ success: true, devices });
+
+    for (const dev of devices) {
+      if (!clients.has(dev.serial)) clients.set(dev.serial, new ECPClient(dev.ip));
+      if (!registryTools.has(dev.serial)) registryTools.set(dev.serial, new RegistryTool(dev.ip));
+    }
+    broadcast({ type: 'devices', devices: deviceManager.list() });
+    res.json({ success: true, devices, count: devices.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/** POST /api/device/add — Add a device by IP directly (bypasses discovery) */
+app.post('/api/device/add', async (req, res) => {
+  try {
+    const { ip } = req.body;
+    if (!ip) return res.status(400).json({ success: false, error: 'ip required' });
+    const client = new ECPClient(ip);
+    let serial, info;
+    try {
+      info = await client.deviceInfo();
+      serial = info?.['serial-number']?.['#text'] || info?.['serial-number'] || ip;
+    } catch {
+      serial = ip; // Accept it anyway — might just not respond to device-info
+    }
+    if (!clients.has(serial)) clients.set(serial, client);
+    if (!registryTools.has(serial)) registryTools.set(serial, new RegistryTool(ip));
+    const healthy = await client.ping().catch(() => false);
+    const device = { serial: String(serial), ip, url: `http://${ip}:8060/`, healthy, server: info?.['model-name']?.['#text'] || 'Manual', discoveredAt: new Date().toISOString() };
+    // Add to device manager too
+    const devMap = deviceManager.devices;
+    devMap.set(String(serial), { ...device, client, lastSeen: new Date() });
+    broadcast({ type: 'devices', devices: deviceManager.list() });
+    res.json({ success: true, device });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -578,6 +618,7 @@ async function startup() {
   }
   console.log(`  Dashboard      →  http://${HOST}:${mainPort}`);
   console.log(`  API            →  http://${HOST}:${mainPort}/api`);
+  console.log(`  PID            →  ${process.pid}`);
   console.log('');
 
   // Auto-discover
