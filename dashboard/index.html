@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roku Dev Toolkit</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;
+  --text-dim:#8b949e;--accent:#58a6ff;--accent2:#3fb950;--danger:#f85149;
+  --warn:#d29922;--glow:0 0 12px rgba(88,166,255,0.15);
+  --radius:8px;--font:'Segoe UI',system-ui,sans-serif;--mono:'Cascadia Code','Fira Code',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;min-height:100vh}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:1.3em;font-weight:600;letter-spacing:-0.02em}
+header h1 span{color:var(--accent)}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-dot.online{background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.status-dot.offline{background:var(--danger)}
+nav{display:flex;gap:4px;background:var(--surface);padding:8px 20px;border-bottom:1px solid var(--border)}
+nav button{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:8px 16px;border-radius:var(--radius);cursor:pointer;font-size:0.9em;transition:all 0.15s}
+nav button:hover,nav button.active{color:var(--text);border-color:var(--border);background:rgba(88,166,255,0.08)}
+main{padding:20px;max-width:1600px;margin:0 auto}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.panel h2{font-size:1em;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.card:hover{border-color:var(--accent);box-shadow:var(--glow)}
+.metric{text-align:center;padding:16px}
+.metric .value{font-size:2em;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.metric .label{font-size:0.8em;color:var(--text-dim);margin-top:4px}
+.metric.warn .value{color:var(--warn)}
+.metric.good .value{color:var(--accent2)}
+.metric.danger .value{color:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:0.85em}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--text-dim);font-weight:500;text-transform:uppercase;font-size:0.75em;letter-spacing:0.05em}
+td{font-family:var(--mono);font-size:0.85em}
+tr:hover td{background:rgba(88,166,255,0.05)}
+.remote-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:300px;margin:0 auto}
+.remote-pad button{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);cursor:pointer;font-size:1.1em;transition:all 0.1s}
+.remote-pad button:active{background:var(--accent);border-color:var(--accent);transform:scale(0.95)}
+.remote-pad .wide{grid-column:span 3}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:0.85em;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
+button.btn{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;font-size:0.85em;transition:opacity 0.15s}
+button.btn:hover{opacity:0.85}
+button.btn-sm{font-size:0.75em;padding:4px 10px}
+button.btn-danger{background:var(--danger)}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:0.7em;font-weight:600}
+.badge-privacy{background:rgba(248,81,73,0.15);color:var(--danger)}
+.badge-tracking{background:rgba(210,153,34,0.15);color:var(--warn)}
+.badge-system{background:rgba(88,166,255,0.15);color:var(--accent)}
+.badge-display{background:rgba(63,185,80,0.15);color:var(--accent2)}
+.badge-audio{background:rgba(163,113,247,0.15);color:#a371f7}
+.badge-network{background:rgba(121,192,255,0.15);color:#79c0ff}
+.log-line{font-family:var(--mono);font-size:0.75em;padding:4px 8px;border-bottom:1px solid var(--border);color:var(--text-dim)}
+.log-line .time{color:var(--warn);margin-right:12px}
+.log-line .type{color:var(--accent2);margin-right:8px}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab-btn{background:transparent;border:1px solid var(--border);border-bottom:none;color:var(--text-dim);padding:8px 16px;border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;font-size:0.85em}
+.tab-btn.active{color:var(--accent);background:var(--bg);border-color:var(--accent)}
+input[type="range"]{width:100%;accent-color:var(--accent)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--accent2);padding:12px 20px;border-radius:var(--radius);opacity:0;transform:translateY(10px);transition:all 0.2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔧 <span>Roku</span> Dev Toolkit</h1>
+  <div id="device-status">
+    <span class="status-dot offline" id="status-dot"></span>
+    <span id="status-text">No devices</span>
+  </div>
+</header>
+
+<nav>
+  <button data-panel="overview" class="active">Overview</button>
+  <button data-panel="remote">Remote</button>
+  <button data-panel="apps">Apps</button>
+  <button data-panel="registry">Registry</button>
+  <button data-panel="performance">Performance</button>
+  <button data-panel="scenegraph">SceneGraph</button>
+  <button data-panel="proxy">Stream Proxy</button>
+  <button data-panel="logs">Logs</button>
+</nav>
+
+<main>
+  <!-- OVERVIEW -->
+  <div id="panel-overview">
+    <div class="grid grid-4" id="metrics-grid"></div>
+    <div class="panel"><h2>Connected Devices</h2><div id="devices-table"></div></div>
+    <div class="grid grid-2">
+      <div class="panel"><h2>Device Info</h2><div id="device-info"></div></div>
+      <div class="panel"><h2>Media Player</h2><div id="media-player"></div></div>
+    </div>
+  </div>
+
+  <!-- REMOTE -->
+  <div id="panel-remote" class="hidden">
+    <div class="panel">
+      <h2>Remote Control</h2>
+      <select id="remote-device-select" style="margin-bottom:12px"><option>Select device...</option></select>
+      <div class="remote-pad">
+        <div></div><button onclick="sendKey('Up')">▲</button><div></div>
+        <button onclick="sendKey('Left')">◄</button><button onclick="sendKey('Select')">OK</button><button onclick="sendKey('Right')">►</button>
+        <div></div><button onclick="sendKey('Down')">▼</button><div></div>
+        <button onclick="sendKey('Back')" class="wide">Back</button>
+        <button onclick="sendKey('Home')" class="wide">Home</button>
+        <button onclick="sendKey('PlayPause')">⏯</button>
+        <button onclick="sendKey('Rev')">⏪</button>
+        <button onclick="sendKey('Fwd')">⏩</button>
+        <button onclick="sendKey('Info')">ℹ</button>
+        <button onclick="sendKey('Star')">⭐</button>
+        <button onclick="sendKey('VolumeUp')">🔊</button>
+        <button onclick="sendKey('VolumeDown')">🔉</button>
+        <button onclick="sendKey('VolumeMute')">🔇</button>
+        <button onclick="sendKey('PowerOff')" class="wide" style="background:var(--danger)">Power Off</button>
+      </div>
+      <div class="panel" style="margin-top:12px">
+        <h2>Text Input</h2>
+        <div style="display:flex;gap:8px">
+          <input id="text-input" placeholder="Type to send text to Roku..." onkeydown="if(event.key==='Enter')sendText()">
+          <button class="btn" onclick="sendText()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPS -->
+  <div id="panel-apps" class="hidden">
+    <div class="panel">
+      <h2>Installed Apps</h2>
+      <select id="apps-device-select" style="margin-bottom:12px"><option>Select device...</option></select>
+      <div id="apps-list"></div>
+    </div>
+    <div class="panel">
+      <h2>Launch App</h2>
+      <div style="display:flex;gap:8px">
+        <input id="launch-app-id" placeholder="App ID (e.g., 12 for Netflix)">
+        <input id="launch-app-params" placeholder="Optional params (key=value)">
+        <button class="btn" onclick="launchApp()">Launch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTRY -->
+  <div id="panel-registry" class="hidden">
+    <div class="panel">
+      <h2>Registry Explorer</h2>
+      <select id="registry-device-select" style="margin-bottom:8px"><option>Select device...</option></select>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="registry-search" placeholder="Search keys or values...">
+        <select id="registry-category">
+          <option value="">All Categories</option>
+          <option value="privacy">Privacy</option>
+          <option value="tracking">Tracking</option>
+          <option value="system">System</option>
+          <option value="display">Display</option>
+          <option value="audio">Audio</option>
+          <option value="network">Network</option>
+          <option value="accessibility">Accessibility</option>
+          <option value="power">Power</option>
+          <option value="developer">Developer</option>
+        </select>
+        <button class="btn" onclick="loadRegistry()">Load</button>
+        <button class="btn btn-danger" onclick="runPrivacyAudit()">Privacy Audit</button>
+      </div>
+      <div id="registry-table"></div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE -->
+  <div id="panel-performance" class="hidden">
+    <div class="grid grid-3" id="perf-metrics"></div>
+    <div class="panel"><h2>CPU & Memory (chanperf)</h2><pre id="chanperf-data" style="font-size:0.8em;max-height:300px;overflow:auto">Select device to load...</pre></div>
+    <div class="panel"><h2>Graphics FPS</h2><pre id="gfx-data" style="font-size:0.8em">Select device to load...</pre></div>
+    <div class="panel"><h2>Texture Memory (r2d2-bitmaps)</h2><pre id="bitmap-data" style="font-size:0.8em;max-height:300px;overflow:auto">Select device to load...</pre></div>
+  </div>
+
+  <!-- SCENEGRAPH -->
+  <div id="panel-scenegraph" class="hidden">
+    <div class="panel"><h2>SceneGraph Node Explorer</h2>
+      <select id="sg-device-select" style="margin-bottom:8px"><option>Select device...</option></select>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn" onclick="loadSGNodes('all')">All Nodes</button>
+        <button class="btn" onclick="loadSGNodes('roots')">Root Nodes</button>
+        <button class="btn" onclick="loadSGNodes('count')">Count Only</button>
+      </div>
+      <pre id="sg-data" style="font-size:0.75em;max-height:400px;overflow:auto;white-space:pre-wrap">Select device to load...</pre>
+    </div>
+  </div>
+
+  <!-- STREAM PROXY -->
+  <div id="panel-proxy" class="hidden">
+    <div class="grid grid-4" id="proxy-metrics"></div>
+    <div class="panel">
+      <h2>Ad Blocking</h2>
+      <div style="display:flex;gap:12px;margin-bottom:12px">
+        <button class="btn" id="ad-block-toggle" onclick="toggleAdBlock()">Ad Block: ON</button>
+        <button class="btn" id="quality-toggle" onclick="toggleQuality()">Quality Filter: ON</button>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;margin-bottom:4px">Max Bitrate: <span id="bitrate-label">8 Mbps</span></label>
+        <input type="range" min="1" max="50" value="8" oninput="updateBitrate(this.value)" id="bitrate-slider">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="display:block;margin-bottom:4px">Max Resolution:</label>
+        <select id="max-res" onchange="updateResolution(this.value)">
+          <option value="">No Limit</option>
+          <option value="1920x1080" selected>1080p (Full HD)</option>
+          <option value="1280x720">720p (HD)</option>
+          <option value="854x480">480p (SD)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <div id="panel-logs" class="hidden">
+    <div class="panel"><h2>Event Log</h2><div id="log-container" style="max-height:500px;overflow:auto;font-family:var(--mono)"></div></div>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ─── State ───
+const STATE = {
+  devices: [],
+  selectedDevice: null,
+  ws: null,
+  logs: [],
+};
+
+// ─── WebSocket ───
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  STATE.ws = new WebSocket(`${proto}//${location.host}/ws`);
+  STATE.ws.onmessage = (ev) => {
+    const data = JSON.parse(ev.data);
+    handleWSMessage(data);
+  };
+  STATE.ws.onclose = () => setTimeout(connectWS, 3000);
+  STATE.ws.onerror = () => {};
+}
+
+function handleWSMessage(data) {
+  if (data.type === 'devices') {
+    STATE.devices = data.devices;
+    renderDevices();
+    updateStatus();
+  } else if (data.type === 'health') {
+    updateDeviceHealth(data.serial, data.healthy);
+  } else if (data.type === 'snapshot') {
+    renderSnapshot(data.snapshot);
+  }
+  addLog(data);
+}
+
+function addLog(data) {
+  STATE.logs.unshift({ ts: new Date().toLocaleTimeString(), ...data });
+  if (STATE.logs.length > 200) STATE.logs.length = 200;
+  const container = document.getElementById('log-container');
+  if (container) {
+    container.innerHTML = STATE.logs.slice(0, 50).map(l =>
+      `<div class="log-line"><span class="time">${l.ts}</span><span class="type">${l.type||''}</span>${JSON.stringify(l).substring(0,120)}</div>`
+    ).join('');
+  }
+}
+
+// ─── API helpers ───
+async function api(url, opts = {}) {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!res.ok) {
+    const err = await res.text();
+    showToast(`Error: ${res.status}`, 'error');
+    throw new Error(err);
+  }
+  return res.json();
+}
+
+function getSelectedDevice() {
+  return document.getElementById('remote-device-select')?.value || STATE.selectedDevice;
+}
+
+// ─── Navigation ───
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('[id^="panel-"]').forEach(p => p.classList.add('hidden'));
+    document.getElementById(`panel-${btn.dataset.panel}`).classList.remove('hidden');
+    if (btn.dataset.panel === 'overview') loadOverview();
+    if (btn.dataset.panel === 'apps') loadApps();
+    if (btn.dataset.panel === 'performance') loadPerf();
+    if (btn.dataset.panel === 'proxy') loadProxyStatus();
+  });
+});
+
+// ─── Devices ───
+async function discover() {
+  showToast('Scanning network...');
+  try {
+    const res = await api('/api/discover');
+    STATE.devices = res.devices;
+    renderDevices();
+    updateStatus();
+    showToast(`Found ${res.devices.length} device(s)`);
+  } catch(e) {
+    showToast('Discovery failed', 'error');
+  }
+}
+
+function renderDevices() {
+  const html = STATE.devices.length === 0
+    ? '<p style="color:var(--text-dim)">No devices found. <a href="#" onclick="discover()" style="color:var(--accent)">Scan now</a></p>'
+    : `<table><thead><tr><th>Serial</th><th>IP</th><th>Status</th><th>Server</th><th>Actions</th></tr></thead><tbody>
+      ${STATE.devices.map(d => `<tr>
+        <td style="font-family:var(--mono)">${d.serial||'?'}</td>
+        <td>${d.ip}</td>
+        <td><span class="status-dot ${d.healthy?'online':'offline'}"></span>${d.healthy?'Online':'Offline'}</td>
+        <td style="font-size:0.8em">${d.server||'?'}</td>
+        <td>
+          <button class="btn btn-sm" onclick="selectDevice('${d.serial}')">Select</button>
+          <button class="btn btn-sm" onclick="snapshotDevice('${d.serial}')">Snapshot</button>
+        </td>
+      </tr>`).join('')}</tbody></table>`;
+  
+  const el = document.getElementById('devices-table');
+  if (el) el.innerHTML = html;
+  
+  // Update all device selects
+  document.querySelectorAll('select[id$="-device-select"]').forEach(sel => {
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select device...</option>' +
+      STATE.devices.map(d => `<option value="${d.serial}">${d.serial} (${d.ip})</option>`).join('');
+    if (current) sel.value = current;
+  });
+}
+
+function updateStatus() {
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const online = STATE.devices.filter(d => d.healthy).length;
+  
+  if (online > 0) {
+    dot.className = 'status-dot online';
+    text.textContent = `${online} device(s) online`;
+  } else if (STATE.devices.length > 0) {
+    dot.className = 'status-dot offline';
+    text.textContent = `${STATE.devices.length} device(s), all offline`;
+  } else {
+    dot.className = 'status-dot offline';
+    text.textContent = 'No devices';
+  }
+}
+
+function updateDeviceHealth(serial, healthy) {
+  const dev = STATE.devices.find(d => d.serial === serial);
+  if (dev) dev.healthy = healthy;
+  updateStatus();
+}
+
+async function selectDevice(serial) {
+  STATE.selectedDevice = serial;
+  document.querySelectorAll('select[id$="-device-select"]').forEach(s => s.value = serial);
+  showToast(`Selected: ${serial}`);
+  loadOverview();
+}
+
+async function snapshotDevice(serial) {
+  showToast('Taking snapshot...');
+  const res = await api(`/api/device/${serial || STATE.selectedDevice}/snapshot`, { method: 'POST' });
+  renderSnapshot(res.snapshot);
+  showToast('Snapshot complete');
+}
+
+function renderSnapshot(snapshot) {
+  document.getElementById('device-info').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(snapshot.device,null,2)}</pre>`;
+  document.getElementById('media-player').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(snapshot.mediaPlayer,null,2)}</pre>`;
+  updateMetrics(snapshot);
+}
+
+function updateMetrics(snapshot) {
+  const apps = snapshot.apps?.length || 0;
+  const gfx = snapshot.graphicsFps || 'N/A';
+  const active = snapshot.activeApp?.['#text'] || snapshot.activeApp?.id || 'None';
+  document.getElementById('metrics-grid').innerHTML = `
+    <div class="card metric"><div class="value">${apps}</div><div class="label">Installed Apps</div></div>
+    <div class="card metric"><div class="value">${active}</div><div class="label">Active App</div></div>
+    <div class="card metric"><div class="value">${gfx}</div><div class="label">Graphics FPS</div></div>
+    <div class="card metric"><div class="value">${snapshot.errors?.length||0}</div><div class="label">Errors</div></div>
+  `;
+}
+
+// ─── Overview ───
+async function loadOverview() {
+  const serial = getSelectedDevice();
+  if (!serial) return;
+  const res = await api(`/api/device/${serial}`);
+  document.getElementById('device-info').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(res.deviceInfo,null,2)}</pre>`;
+  
+  const apps = res.apps || [];
+  document.getElementById('apps-list') && (document.getElementById('apps-list').innerHTML = 
+    `<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Version</th></tr></thead><tbody>
+    ${apps.map(a => `<tr><td>${a['@_id']||a.id||'?'}</td><td>${a['#text']||a.name||'?'}</td><td>${a['@_type']||a.type||''}</td><td>${a['@_version']||a.version||''}</td></tr>`).join('')}
+    </tbody></table>`);
+  
+  try {
+    const mp = await api(`/api/device/${serial}/media-player`);
+    document.getElementById('media-player').innerHTML = `<pre style="font-size:0.75em;white-space:pre-wrap;max-height:300px;overflow:auto">${JSON.stringify(mp.player||mp,null,2)}</pre>`;
+  } catch(e) {}
+  
+  updateMetrics({ apps, activeApp: res.activeApp });
+}
+
+// ─── Remote ───
+async function sendKey(key) {
+  const serial = getSelectedDevice();
+  if (!serial) { showToast('Select a device first', 'error'); return; }
+  try {
+    await api(`/api/device/${serial}/keypress`, { method: 'POST', body: JSON.stringify({ key }) });
+  } catch(e) { showToast('Key failed', 'error'); }
+}
+
+async function sendText() {
+  const serial = getSelectedDevice();
+  const text = document.getElementById('text-input').value;
+  if (!serial || !text) return;
+  await api(`/api/device/${serial}/type`, { method: 'POST', body: JSON.stringify({ text }) });
+  document.getElementById('text-input').value = '';
+}
+
+// ─── Apps ───
+async function loadApps() {
+  const serial = document.getElementById('apps-device-select').value;
+  if (!serial) return;
+  const res = await api(`/api/device/${serial}/apps`);
+  document.getElementById('apps-list').innerHTML = 
+    `<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Version</th><th>Actions</th></tr></thead><tbody>
+    ${(res.apps||[]).map(a => `<tr>
+      <td style="font-family:var(--mono)">${a['@_id']||a.id||'?'}</td>
+      <td>${a['#text']||a.name||'?'}</td>
+      <td>${a['@_type']||a.type||''}</td>
+      <td>${a['@_version']||a.version||''}</td>
+      <td>
+        <button class="btn btn-sm" onclick="launchApp('${a['@_id']||a.id}')">Launch</button>
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+async function launchApp(appId) {
+  const id = appId || document.getElementById('launch-app-id').value;
+  const serial = getSelectedDevice() || document.getElementById('apps-device-select').value;
+  if (!serial || !id) { showToast('Need device and app ID', 'error'); return; }
+  const params = document.getElementById('launch-app-params')?.value || '';
+  await api(`/api/device/${serial}/launch`, { method: 'POST', body: JSON.stringify({ appId: id, params: params ? Object.fromEntries([params.split('=')]) : null }) });
+  showToast(`Launched ${id}`);
+}
+
+// ─── Registry ───
+async function loadRegistry() {
+  const serial = document.getElementById('registry-device-select').value;
+  if (!serial) return;
+  const search = document.getElementById('registry-search').value;
+  const category = document.getElementById('registry-category').value;
+  
+  let url = `/api/device/${serial}/registry?export=true`;
+  if (search) url += `&search=${encodeURIComponent(search)}`;
+  if (category) {
+    // Load known keys for category
+    const keysRes = await api(`/api/registry/known-keys?category=${category}`);
+    renderRegistry(keysRes.keys, serial);
+    return;
+  }
+  
+  const res = await api(url);
+  renderRegistryFromEntries(res.entries, serial);
+}
+
+async function renderRegistryFromEntries(entries, serial) {
+  const html = `<table><thead><tr><th>Key</th><th>Value</th><th>Section</th><th>Info</th></tr></thead><tbody>
+    ${entries.map(e => {
+      const info = e.known ? `${e.known.description} <span class="badge badge-${e.known.category}">${e.known.category}</span>` : '';
+      return `<tr>
+        <td style="font-family:var(--mono)">${e.key}</td>
+        <td style="font-family:var(--mono);word-break:break-all;max-width:300px">${e.value}</td>
+        <td>${e.section||''}</td>
+        <td style="font-size:0.8em">${info}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  document.getElementById('registry-table').innerHTML = html;
+}
+
+function renderRegistry(keys, serial) {
+  const html = `<table><thead><tr><th>Key</th><th>Description</th><th>Category</th><th>Default</th><th>Type</th></tr></thead><tbody>
+    ${Object.entries(keys).map(([k,v]) => `<tr>
+      <td style="font-family:var(--mono)">${k}</td>
+      <td>${v.description}</td>
+      <td><span class="badge badge-${v.category}">${v.category}</span></td>
+      <td>${v.defaultValue||''}</td>
+      <td>${v.type||''}${v.readOnly?' (RO)':''}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('registry-table').innerHTML = html;
+}
+
+async function runPrivacyAudit() {
+  const serial = document.getElementById('registry-device-select').value;
+  if (!serial) return;
+  const res = await api(`/api/device/${serial}/registry?audit=privacy`);
+  const html = `<table><thead><tr><th>Key</th><th>Description</th><th>Current</th><th>Status</th><th>Recommend</th></tr></thead><tbody>
+    ${res.audit.map(a => `<tr>
+      <td style="font-family:var(--mono)">${a.key}</td>
+      <td>${a.description}</td>
+      <td>${a.currentValue}</td>
+      <td><span class="badge badge-${a.status==='enabled'?'tracking':'privacy'}">${a.status}</span></td>
+      <td>${a.recommended}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('registry-table').innerHTML = html;
+  showToast('Privacy audit complete');
+}
+
+// ─── Performance ───
+async function loadPerf() {
+  const serial = getSelectedDevice();
+  if (!serial) return;
+  
+  try {
+    const chanperf = await api(`/api/device/${serial}/chanperf`);
+    document.getElementById('chanperf-data').textContent = JSON.stringify(chanperf.perf||chanperf, null, 2);
+  } catch(e) { document.getElementById('chanperf-data').textContent = 'Not available (dev mode required)'; }
+  
+  try {
+    const gfx = await api(`/api/device/${serial}/graphics-fps`);
+    document.getElementById('gfx-data').textContent = JSON.stringify(gfx.gfx||gfx, null, 2);
+  } catch(e) { document.getElementById('gfx-data').textContent = 'Not available'; }
+  
+  try {
+    const bmp = await api(`/api/device/${serial}/bitmaps`);
+    document.getElementById('bitmap-data').textContent = JSON.stringify(bmp.bitmaps||bmp, null, 2);
+  } catch(e) { document.getElementById('bitmap-data').textContent = 'Not available'; }
+}
+
+// ─── SceneGraph ───
+async function loadSGNodes(scope) {
+  const serial = document.getElementById('sg-device-select').value || getSelectedDevice();
+  if (!serial) return;
+  let url = `/api/device/${serial}/sgnodes`;
+  if (scope === 'roots') url += '?scope=roots';
+  if (scope === 'count') url += '?countOnly=true';
+  const res = await api(url);
+  document.getElementById('sg-data').textContent = JSON.stringify(res.result, null, 2);
+}
+
+// ─── Stream Proxy ───
+async function loadProxyStatus() {
+  try {
+    const res = await api('/api/proxy/status');
+    document.getElementById('proxy-metrics').innerHTML = `
+      <div class="card metric"><div class="value">${res.totalRequests||0}</div><div class="label">Total Requests</div></div>
+      <div class="card metric good"><div class="value">${res.adsBlocked||0}</div><div class="label">Ads Blocked</div></div>
+      <div class="card metric"><div class="value">${res.activeStreams||0}</div><div class="label">Active Streams</div></div>
+      <div class="card metric warn"><div class="value">${formatBytes(res.bytesProxied||0)}</div><div class="label">Data Proxied</div></div>
+    `;
+  } catch(e) { /* proxy not running */ }
+}
+
+let adBlockEnabled = true;
+let qualityFilterEnabled = true;
+
+async function toggleAdBlock() {
+  const btn = document.getElementById('ad-block-toggle');
+  adBlockEnabled = !adBlockEnabled;
+  btn.textContent = `Ad Block: ${adBlockEnabled ? 'ON' : 'OFF'}`;
+  try {
+    await api('/api/proxy/config', { method: 'POST', body: JSON.stringify({ adBlocking: { enabled: adBlockEnabled } }) });
+  } catch(e) { /* non-fatal */ }
+}
+
+async function toggleQuality() {
+  const btn = document.getElementById('quality-toggle');
+  qualityFilterEnabled = !qualityFilterEnabled;
+  btn.textContent = `Quality Filter: ${qualityFilterEnabled ? 'ON' : 'OFF'}`;
+  try {
+    await api('/api/proxy/config', { method: 'POST', body: JSON.stringify({ quality: { enabled: qualityFilterEnabled } }) });
+  } catch(e) { /* non-fatal */ }
+}
+
+function updateBitrate(val) {
+  document.getElementById('bitrate-label').textContent = `${val} Mbps`;
+}
+
+function updateResolution(val) {
+  // Will send to proxy config
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+// ─── Toast ───
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.style.borderColor = type === 'error' ? 'var(--danger)' : 'var(--accent2)';
+  toast.className = 'toast show';
+  setTimeout(() => toast.className = 'toast', 2500);
+}
+
+// ─── Init ───
+connectWS();
+discover();
+loadProxyStatus();
+</script>
+</body>
+</html>

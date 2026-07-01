@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="BridgeScene" extends="Scene">
+  <script type="text/brightscript" uri="pkg:/source/main.brs" />
+  <script type="text/brightscript" uri="pkg:/components/BridgeScene.brs" />
+  
+  <children>
+    <!-- Status overlay -->
+    <Group id="statusGroup" translation="[100,100]">
+      <Label 
+        id="statusLabel" 
+        text="RokuTK Bridge Active" 
+        color="0x00FF00"
+        font="font:LargeSystemFont"
+        width="1080"
+        horizAlign="center" />
+      
+      <Label 
+        id="deviceLabel" 
+        text="" 
+        color="0x888888"
+        font="font:MediumSystemFont"
+        width="1080"
+        horizAlign="center"
+        translation="[0,60]" />
+        
+      <Label 
+        id="ipLabel" 
+        text="Connecting..." 
+        color="0x58A6FF"
+        font="font:SmallSystemFont"
+        width="1080"
+        horizAlign="center"
+        translation="[0,100]" />
+    </Group>
+    
+    <!-- Background -->
+    <Rectangle 
+      id="background"
+      width="1280"
+      height="720"
+      color="0x0D1117FF" />
+  </children>
+</component>

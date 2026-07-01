@@ -1,0 +1,29 @@
+{
+  "name": "roku-toolkit",
+  "version": "1.0.0",
+  "description": "Complete Roku Dev Toolkit + Stream Proxy — hardware freedom suite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "scan": "node -e \"const s=require('./lib/scanner');s.discover().then(devices=>console.log(JSON.stringify(devices,null,2)))\"",
+    "ecp": "node -e \"const e=require('./lib/ecp');const c=new e.ECPClient(process.argv[2]);c.deviceInfo().then(d=>console.log(JSON.stringify(d,null,2)))\"",
+    "proxy": "node proxy/stream-proxy.js",
+    "test": "node -e \"require('./lib/ecp');require('./lib/registry');require('./lib/scanner');require('./proxy/stream-proxy');console.log('All modules load OK')\""
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "http-proxy": "^1.18.1",
+    "fast-xml-parser": "^4.3.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  },
+  "keywords": ["roku", "ecp", "stream-proxy", "dev-tools", "sideload"],
+  "license": "MIT",
+  "author": "Gabriel"
+}
