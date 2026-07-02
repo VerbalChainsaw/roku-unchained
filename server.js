@@ -660,8 +660,28 @@ async function startup() {
   // Auto-discover
   process.stdout.write('  Scanning network...');
   await deviceManager.discover().catch(() => {});
-  const found = deviceManager.list();
+  let found = deviceManager.list();
   
+  // Seed known IPs — try common TV address if discovery missed it
+  if (found.length === 0) {
+    const knownIps = (process.env.ROKU_IPS || '10.10.10.45').split(',');
+    for (const ip of knownIps.map(s => s.trim()).filter(Boolean)) {
+      try {
+        const client = new ECPClient(ip);
+        const info = await client.deviceInfo();
+        const serial = String(info?.['serial-number']?.['#text'] || info?.['serial-number'] || ip);
+        clients.set(serial, client);
+        registryTools.set(serial, new RegistryTool(ip));
+        deviceManager.devices.set(serial, {
+          serial, ip, url: `http://${ip}:8060/`,
+          healthy: true, server: info?.['model-name']?.['#text'] || 'Roku',
+          discoveredAt: new Date().toISOString(), client, lastSeen: new Date(),
+        });
+        found = deviceManager.list();
+      } catch {}
+    }
+  }
+
   if (found.length > 0) {
     console.log(` found ${found.length} device(s)`);
     for (const d of found) {

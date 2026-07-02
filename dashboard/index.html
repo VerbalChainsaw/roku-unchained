@@ -424,7 +424,7 @@ function setupRemote(){
 
 // Devices
 async function discover(note=true){if(note)toast('Scanning network...',null);try{const r=await api('/api/discover');S.devices=r.devices;renderDevices();renderStatus();if(note)toast(`Found ${r.devices.length} device(s)`)}catch{toast('Discovery failed','err')}}
-function renderDevices(){const s=$('device-picker'),v=s.value;let opts='<option value="">Select device...</option>';S.devices.forEach(d=>opts+=`<option value="${d.serial}">${d.serial||'?'} — ${d.ip}</option>`);s.innerHTML=opts;if(v&&S.devices.some(d=>d.serial===v))s.value=v;if(S.serial&&S.devices.some(d=>d.serial===S.serial))s.value=S.serial}
+function renderDevices(){const s=$('device-picker'),v=s.value;let opts='<option value="">Select device...</option>';S.devices.forEach(d=>opts+=`<option value="${d.serial}">${d.serial||'?'} — ${d.ip}</option>`);s.innerHTML=opts;if(v&&S.devices.some(d=>d.serial===v))s.value=v;if(S.serial&&S.devices.some(d=>d.serial===S.serial))s.value=S.serial;if(!S.serial&&S.devices.length>0){S.serial=S.devices[0].serial;s.value=S.serial;loadCurrentPanel()}}
 function renderStatus(){const d=$('status-dot'),t=$('status-text'),o=S.devices.filter(x=>x.healthy).length;if(o>0){d.className='dot ok';t.textContent=`${o} device(s) online`}else if(S.devices.length>0){d.className='dot off';t.textContent=`${S.devices.length} offline`}else{d.className='dot off';t.textContent='No devices'}}
 function selectDevice(s){if(!s)return;S.serial=s;$('device-picker').value=s;toast(`Selected: ${s}`);loadCurrentPanel()}
 
